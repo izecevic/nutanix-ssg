@@ -307,7 +307,7 @@ def foundation_image_nodes (api_server,foundation_payload,username=None,secret=N
 # region foundation_get_imaging_progress
 def foundation_get_imaging_progress (api_server,username=None,secret=None):
     """
-       Retreive current status of foundation imaging progress
+       Retreive status of current foundation imaging progress
 
     Args:
         api_server: The Foundation API server
@@ -336,7 +336,7 @@ def foundation_get_imaging_progress (api_server,username=None,secret=None):
 # region foundation_monitor_progress
 def foundation_monitor_progress (api_server,username=None,secret=None,max_attemps=120,retry_delay_secs=60):
     """
-       Monitor current foundation imaging progress
+       Monitor current foundation imaging progress with a maximum attemps and retry configurable. 
 
     Args:
         api_server: The Foundation API server
