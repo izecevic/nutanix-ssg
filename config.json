@@ -1,0 +1,24 @@
+{
+    "foundation_ip":"10.48.108.34",
+    "user": "admin",
+    "pwd": "nutanix/4u",
+    "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
+    "cluster":{
+        "virtual_ip":"10.48.69.10",
+        "data_service_ip":"10.48.69.11",
+        "name":"superman",
+        "dns": "10.48.104.10",
+        "ntp": "ntp.dyn.nutanix.com",
+        "timezone": "Europe/Paris",
+        "hyp_cvm_gateway":"10.48.68.1",
+        "hyp_cvm_netmask":"255.255.254.0",
+        "ipmi_netmask":"255.255.254.0",
+        "ipmi_gateway":"10.49.44.1",
+        "nos_package":"nutanix_installer_package-release-euphrates-5.19.1-stable-x86_64.tar",
+        "replication_factor":"2",
+        "nodes":[
+          {"node_position":"A", "hypervisor_hostname":"node1", "hypervisor_ip":"10.48.69.2", "cvm_ip":"10.48.69.6", "ipmi_ip":"10.49.44.77", "ipmi_mac":"0c:c4:7a:66:e2:86", "ipmi_user":"ADMIN", "ipmi_pwd":"ADMIN"},
+          {"node_position":"B", "hypervisor_hostname":"node2", "hypervisor_ip":"10.48.69.3", "cvm_ip":"10.48.69.7", "ipmi_ip":"10.49.44.78", "ipmi_mac":"0c:c4:7a:66:e2:86", "ipmi_user":"ADMIN", "ipmi_pwd":"ADMIN"},
+          {"node_position":"C", "hypervisor_hostname":"node3", "hypervisor_ip":"10.48.69.4", "cvm_ip":"10.48.69.8", "ipmi_ip":"10.49.44.79", "ipmi_mac":"0c:c4:7a:66:e2:86", "ipmi_user":"ADMIN", "ipmi_pwd":"ADMIN"}        ]
+    }  
+  }
