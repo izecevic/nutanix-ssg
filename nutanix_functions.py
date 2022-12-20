@@ -275,11 +275,11 @@ def foundation_generate_image_payload(foundation_config:dict):
 # region foundation_image_nodes
 def foundation_image_nodes (api_server,foundation_payload,username=None,secret=None):
     """
-       Trigger a foundation imaging
+       Trigger a foundation imaging process
 
     Args:
         api_server: The Foundation API server
-        foundation_payload: son payload used by Foundation to image a given set of nodes 
+        foundation_payload: json payload used by Foundation to image a given set of nodes 
         and create a Nutanix AHV cluster
         username: None (no authentication on the foundation API)
         secret: None (no authentication on the foundation API)
