@@ -201,7 +201,7 @@ def foundation_get_hypervisors (api_server,username=None,secret=None):
 def foundation_generate_image_payload(foundation_config:dict):
     """
         Generates a json payload for foundation imaging endppoint to image a given set of nodes
-        and create a Nutanix cluster
+        and create a Nutanix AHV cluster
 
     Args:
         foundation_config: json object with all keys required for node and cluster imaging
