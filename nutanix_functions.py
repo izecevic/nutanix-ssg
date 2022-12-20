@@ -223,8 +223,6 @@ def foundation_generate_image_payload(foundation_config:dict):
     foundation_payload = {
         'clusters': [],
         'blocks': [{'block_id': None,'nodes': [],}],
-        #'ipmi_vlan_mode': 'trunk',
-        # 'ui_platform': foundation_config['ui_platform'],
         'ipmi_netmask': foundation_config['ipmi_netmask'], 
         'ipmi_gateway': foundation_config['ipmi_gateway'], 
         'cvm_netmask': foundation_config['hyp_cvm_netmask'],
@@ -253,8 +251,6 @@ def foundation_generate_image_payload(foundation_config:dict):
             'hypervisor_ip':node['hypervisor_ip'],
             'cvm_ip': node['cvm_ip'],
             'ipmi_ip': node['ipmi_ip'],
-            #'cvm_gb_ram': 32, 
-            #'ipmi_configure_now': True, 
             'image_now': True
         })
     # endregion
@@ -265,12 +261,10 @@ def foundation_generate_image_payload(foundation_config:dict):
         'cluster_external_ip': foundation_config['virtual_ip'],
         'cluster_name' : foundation_config['name'],
         'redundancy_factor' : int(foundation_config['replication_factor']),
-        #'cluster_members' : [cvm['cvm_ip'] for cvm in foundation_payload['blocks'][0]['nodes']],
         'cluster_members' : [cvm['cvm_ip'] for cvm in foundation_config['nodes']],
         'cvm_dns_servers': foundation_config['dns'],
         'cvm_ntp_servers': foundation_config['ntp'],
         'timezone': foundation_config['timezone'],
-        #'cluster_init_successful' : True,
         'cluster_init_now' : True
     }]
 
