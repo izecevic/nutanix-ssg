@@ -4,6 +4,18 @@
     "pwd": "MyPassword123!",
     "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
     "pulse": true,
+    "networks":[
+        {"name": "INFRA", "vlan": 50, "ipam":{"address":"10.227.3.0", "prefix":24, "gateway":"10.227.3.1", "pool":"10.227.3.6 10.227.3.100"}},
+        {"name": "SUP", "vlan": 70}
+    ],
+    "images":[
+        {
+          "name": "iz-test-centos",
+          "description": "iz-test-centos-image",
+          "container": "SelfServiceContainer",
+          "url": "http://download.nutanix.com/calm/CentOS-7-x86_64-GenericCloud.qcow2"
+        }
+      ],
     "cluster":{
         "virtual_ip":"10.48.69.6",
         "data_service_ip":"10.48.69.11",

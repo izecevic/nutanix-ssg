@@ -584,7 +584,7 @@ def prism_set_dsip(api_server,username,secret,cluster_dsip):
         cluster_dsip: Data service IP
         
     Returns:
-         True or False
+         None
     """
 
     #region prepare the api call
@@ -603,5 +603,269 @@ def prism_set_dsip(api_server,username,secret,cluster_dsip):
     return resp
 # endregion
 
+# region prism_get_networks
+def prism_get_networks(api_server,username,secret,network_name=None):
+    """
+       Retreive the list of networks from Prism Element.
+       If a network_name is specified, only details for that given network will be returned.
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        network_name (optional): Name of the network
+        
+    Returns:
+         A list of networks (entities part of the json response).
+    """
+
+    # variables
+    net_list = []
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/networks"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET" 
+    # endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # processing the response
+    if network_name == None:
+        print("Returning all networks on Nutanix cluster {}".format(api_server))
+        net_list.extend(resp['entities'])
+        return net_list
+    else: 
+        for network in resp['entities']:
+            if network['name'] == network_name:
+                print("Returning network {} on Nutanix cluster {}".format(network_name,api_server))
+                net_list.append(network)
+                return net_list
+# endregion
+
+# region prism_create_network
+def prism_create_network(api_server,username,secret,network_name,network_vlan,network_ipam_address=None,network_ipam_gateway=None,network_ipam_prefix=None,network_ipam_pool=None):
+    """
+       Create a network on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        network_name: Name of the network
+        network_vlan: Vlan of the network
+        network_ipam_address (optional): IPAM network address
+        network_ipam_gateway (optional): IPAM network default gateway
+        network_ipam_prefix (optional): IPAM network prefix
+        network_ipam_pool (optional): IPAM network pool
+        
+    Returns:
+         Network created
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/networks"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'name': network_name, 
+        'vlan_id': network_vlan
+    } 
+
+    # updating payload with ipam when relevant
+    if network_ipam_address != None:
+        payload.update(ip_config = {
+            'default_gateway': network_ipam_gateway,
+            'network_address': network_ipam_address,
+            'prefix_length': network_ipam_prefix,
+            'pool': [
+                {'range': network_ipam_pool}
+             ]
+        })
+
+    # endregion
+
+    # # Making the call
+    print("Creating network {} on Nutanix cluster {}".format(network_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
+# endregion
+
+# region get containers
+def prism_get_containers(api_server,username,secret,container_name=None):
+    """
+        Retreive the list of containers from Prism Element.
+        If a container_name is specified, only details for that given container will be returned.
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        container_name (optional): Name of the container
+        
+    Returns:
+         A list of containers (entities part of the json response).
+    """
+    # variables
+    containers_list = []
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/storage_containers"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET" 
+    #endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # filtering
+    if container_name == None:
+        print("Returning all containers on Nutanix cluster {}".format(api_server))
+        containers_list.extend(resp['entities'])
+        return containers_list
+    else: 
+        for container in resp['entities']:
+            if container['name'] == container_name:
+                print("Returning container {} on Nutanix cluster {}".format(container_name,api_server))
+                containers_list.append(container)
+                return containers_list
+# endregion
+
+#region prism_get_container_uuid
+def prism_get_container_uuid(api_server,username,secret,container_name):
+    """
+        Retreive container uuid
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        container_name Name of the container
+        
+    Returns:
+         container uuid
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/containers?filterCriteria=container_name=={}".format(container_name)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # return
+    print ("Return container {} uuid".format(container_name))
+    return resp['entities'][0]['containerUuid']
+# endregion
+
+# region prism_upload_image_url
+def prism_upload_image_url(api_server,username,secret,image_name,image_description,image_url,container_uuid,image_type='DISK_IMAGE'):
+    """
+        Upload an image on Prism Element using the url method
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        image_name: Image name.
+        image_description: Image description.
+        image_url: Image url.
+        container_uuid: destination container uuid.
+        image_type: DISK_IMAGE (default) or ISO.
+        
+    Returns:
+         container uuid
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v0.8/images"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'name': image_name,
+        'annotation': image_description,
+        'imageType': image_type,
+        'imageImportSpec': {
+            'containerUuid': container_uuid,
+            'url': image_url
+        }
+    }
+    # endregion
+
+    # Making the call
+    print("Uploading image {} on Nutanix cluster {}".format(image_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
+# endregion
+
+# region prism_monitor_task_v2
+def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=10,max_attemps=30):
+    """
+        Monitor a given task on Prism Element 
+
+    Args:
+        api_server: The Foundation API server
+        username: None (no authentication on the foundation API)
+        secret: None (no authentication on the foundation API)
+        task_uuid: task uuid to monitor
+        max_attemps: 30 (default)
+        retry_delay_secs: 10 seconds (default)
+        
+    Returns:
+        Success or Failure
+    """
+    
+    # variables
+    attempt = 1
+    max_attempts = max_attemps # default is 6
+    retry_delay_secs = retry_delay_secs # default is 10 seconds
+    
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/tasks/{}".format(task_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    #endregion
+
+    # track task process
+    while attempt <= max_attempts:
+        # make the api call
+        print("Making a {} API call to {}".format(method, url))
+        task_progress = process_request(url,method,username,secret,headers)
+        print(json.dumps(task_progress, indent=4))
+        print("Attempt number: {}".format(attempt))
+        if task_progress['percentage_complete'] == 100 and task_progress['progress_status'] == "Succeeded":
+            print("Task succeeded")
+            return
+        elif task_progress['progress_status'] == "Failed":
+            print("Task failed")
+            print(json.dumps(task_progress, indent=4))
+            exit(1)
+        else:
+            print("WARNING: remaining attemps before failure: {0}".format(max_attempts-attempt))
+            print("Let's wait for {} seconds..".format(retry_delay_secs))
+            attempt +=1
+            sleep(retry_delay_secs)
+    print ("Error: Exceeded max attempts {}".format(max_attempts))
+# endregion
 
 # endregion
