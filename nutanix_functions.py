@@ -835,7 +835,7 @@ def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=
     
     # variables
     attempt = 1
-    max_attempts = max_attemps # default is 6
+    max_attempts = max_attemps # default is 30
     retry_delay_secs = retry_delay_secs # default is 10 seconds
     
     #region prepare the api call
