@@ -142,7 +142,7 @@ def process_request(url, method, user, password, headers, payload=None,secure=Fa
 # region foundation_get_aos
 def foundation_get_aos (api_server,username=None,secret=None):
     """
-       Retrieve a list of all AOS packages available on the foundation server
+        Retrieve a list of all AOS packages available on the foundation server
 
     Args:
         api_server: The Foundation API server
@@ -171,7 +171,7 @@ def foundation_get_aos (api_server,username=None,secret=None):
 # region foundation_get_hypervisors
 def foundation_get_hypervisors (api_server,username=None,secret=None):
     """
-       Retreive a list of all hypervisors packages available on the foundation server
+        Retreive a list of all hypervisors packages available on the foundation server
 
     Args:
         api_server: The Foundation API server
@@ -207,7 +207,7 @@ def foundation_generate_image_payload(foundation_config:dict):
         foundation_config: json object with all keys required for node and cluster imaging
         The foundation_config json object should include the following keys (ipmi_netmask,
         hypervisor_netmask, cvm_netmask, ipmi_gateway, cvm_gateway, hypervisor_gateway, nos_package,
-        cluster_virtual_ip, cluster_name, redudancy_factor, dns, ntp, timezone. For each node,
+        cluster_virtual_ip, cluster_name, redundancy_factor, dns, ntp, timezone. For each node,
         the object should include node_position, hypervisor_hostame, hypervisor_ip, cvm_ip, ipmi_ip,
         ipmi_user and ipmi_pwd)
         
@@ -267,15 +267,15 @@ def foundation_generate_image_payload(foundation_config:dict):
         'timezone': foundation_config['timezone'],
         'cluster_init_now' : True
     }]
+    # endregion
 
     return foundation_payload
-    # endregion
 # endregion
 
 # region foundation_image_nodes
 def foundation_image_nodes (api_server,foundation_payload,username=None,secret=None):
     """
-       Trigger a foundation imaging process
+        Trigger a foundation imaging process
 
     Args:
         api_server: The Foundation API server
@@ -307,7 +307,7 @@ def foundation_image_nodes (api_server,foundation_payload,username=None,secret=N
 # region foundation_get_imaging_progress
 def foundation_get_imaging_progress (api_server,username=None,secret=None):
     """
-       Retreive status of current foundation imaging progress
+        Retreive status of current foundation imaging progress
 
     Args:
         api_server: The Foundation API server
@@ -336,7 +336,7 @@ def foundation_get_imaging_progress (api_server,username=None,secret=None):
 # region foundation_monitor_progress
 def foundation_monitor_progress (api_server,username=None,secret=None,max_attemps=120,retry_delay_secs=60):
     """
-       Monitor current foundation imaging progress with a maximum attemps and retry configurable. 
+        Monitor current foundation imaging progress with a maximum attemps and retry configurable. 
 
     Args:
         api_server: The Foundation API server
@@ -378,4 +378,38 @@ def foundation_monitor_progress (api_server,username=None,secret=None,max_attemp
             
     print ("Error: Exceeded max attempts {}".format(max_attempts))
 # endregion
+
+# region prism_update_default_pwd
+def prism_update_default_pwd(api_server,new_secret,username='admin',default_secret='nutanix/4u'):
+    """
+        Change Prism default admin password with new provided password
+
+    Args:
+        api_server: The IP or FQDN of Prism/PC.
+        username: The Prism/PC user name.
+        new_secret : The Prism/PC user name password
+        default_secret: default password upon foundation (nutanix/4u)
+        
+    Returns:
+        None
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/utils/change_default_system_password"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'oldPassword': default_secret,
+        'newPassword': new_secret    
+    }
+    # endregion
+
+    # Making the call
+    print("Updating default Prism admin password on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,default_secret,headers,payload)
+# endregion
+
 # endregion

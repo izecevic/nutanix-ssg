@@ -1,7 +1,7 @@
 {
     "foundation_ip":"10.48.108.34",
     "user": "admin",
-    "pwd": "nutanix/4u",
+    "pwd": "MyPassword123!",
     "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
     "cluster":{
         "virtual_ip":"10.48.69.10",

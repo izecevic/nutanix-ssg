@@ -12,6 +12,8 @@ json_config = json.load(open(file_config))
 foundation_api = json_config['foundation_ip']
 foundation_aos = json_config['cluster']['nos_package']
 foundation_config = json_config['cluster']
+cluster_api = json_config['cluster']['virtual_ip']
+cluster_pwd = json_config['pwd']
 
 # main
 # get nutanix aos package
@@ -23,8 +25,11 @@ if foundation_aos not in foundation_get_aos_details:
 
 # generate foundation json payload
 foundation_payload = foundation_generate_image_payload(foundation_config)
-# print(json.dumps(foundation_payload,indent=4))
+print(json.dumps(foundation_payload,indent=4))
 
 # trigger and track foundation image progress
 foundation_image_nodes(foundation_api,foundation_payload)
 foundation_monitor_progress(foundation_api)
+
+# update prism admin default password
+prism_update_default_pwd(cluster_api,cluster_pwd)
