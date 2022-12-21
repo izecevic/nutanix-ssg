@@ -773,6 +773,50 @@ def prism_get_container_uuid(api_server,username,secret,container_name):
     return resp['entities'][0]['containerUuid']
 # endregion
 
+# region prism_get_images
+def prism_get_images(api_server,username,secret,image_name=None):
+    """
+       Retreive the list of images from Prism Element.
+       If a image_name is specified, only details for that given network will be returned.
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        imamge_name (optional): Name of the image
+        
+    Returns:
+         A list of images (entities part of the json response).
+    """
+    
+    # variables
+    images_list = []
+    
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v0.8/images"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # filtering
+    if image_name == None:
+        print("Returning all images on Nutanix cluster {}".format(api_server))
+        images_list.extend(resp['entities'])
+        return images_list
+    else: 
+        for image in resp['entities']:
+            if image['name'] == image_name:
+                print("Return single image {} on Nutanix cluster {}".format(image_name,api_server))
+                images_list.append(image)
+                return images_list
+# endregion
+
 # region prism_upload_image_url
 def prism_upload_image_url(api_server,username,secret,image_name,image_description,image_url,container_uuid,image_type='DISK_IMAGE'):
     """

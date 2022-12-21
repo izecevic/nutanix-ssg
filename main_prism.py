@@ -26,47 +26,49 @@ cluster_images = json_config['images']
 # main
 
 # # region eulas
-# prism_eula_details = prism_get_eula(cluster_api,cluster_user,cluster_pwd)
-# if 'userDetailsList' not in prism_eula_details['entities'][0]:
-#     prism_accept_eula(cluster_api,cluster_user,cluster_pwd,cluster_eula_username,cluster_eula_companyname,cluster_eula_jobtitle)
-# else:
-#     print("Eulas aready accepted..")
+prism_eula_details = prism_get_eula(cluster_api,cluster_user,cluster_pwd)
+if 'userDetailsList' not in prism_eula_details['entities'][0]:
+    prism_accept_eula(cluster_api,cluster_user,cluster_pwd,cluster_eula_username,cluster_eula_companyname,cluster_eula_jobtitle)
+else:
+    print("Eulas aready accepted on Nutanix cluster {}".format(cluster_api))
 # # endregion
 
 # # region pulse
-# prism_pulse_status = prism_get_pulse(cluster_api,cluster_user,cluster_pwd)
-# if prism_pulse_status['isPulsePromptNeeded'] != False or prism_pulse_status['enable'] != cluster_pulse:
-#     prism_enable_pulse(cluster_api,cluster_user,cluster_pwd,cluster_pulse)
-# else:
-#     print("Pulse already configured properly..")
+prism_pulse_status = prism_get_pulse(cluster_api,cluster_user,cluster_pwd)
+if prism_pulse_status['isPulsePromptNeeded'] != False or prism_pulse_status['enable'] != cluster_pulse:
+    prism_enable_pulse(cluster_api,cluster_user,cluster_pwd,cluster_pulse)
+else:
+    print("Pulse already configured on Nutanix cluster {}".format(cluster_api))
 # # endregion
 
 # # region data service ip
-# cluster_details = prism_get_cluster(cluster_api,cluster_user,cluster_pwd)
-# if cluster_details['clusterExternalDataServicesIPAddress'] != cluster_dsip:
-#     prism_set_dsip(cluster_api,cluster_user,cluster_pwd,cluster_dsip)
-# else:
-#     print("Cluster Data Service IP already configured..")
+cluster_details = prism_get_cluster(cluster_api,cluster_user,cluster_pwd)
+if cluster_details['clusterExternalDataServicesIPAddress'] != cluster_dsip:
+    prism_set_dsip(cluster_api,cluster_user,cluster_pwd,cluster_dsip)
+else:
+    print("Cluster Data Service IP {} already configured on Nutanix cluster".format(cluster_dsip,cluster_api))
 # # endregion
 
 # region networks
-# prism_networks_details = prism_get_networks(cluster_api,cluster_user,cluster_pwd)
-# for network in cluster_networks:
-#     for prism_network in prism_networks_details:
-#         if network['name'] == prism_network['name']:
-#             print("network {} present".format(network))
-
-# for network in cluster_networks:
-#     if 'ipam' in network:
-#         prism_create_network(cluster_api,cluster_user,cluster_pwd,network['name'],network['vlan'],network['ipam']['address'],network['ipam']['gateway'],network['ipam']['prefix'],network['ipam']['pool'])
-#     else:
-#         prism_create_network(cluster_api,cluster_user,cluster_pwd,network['name'],network['vlan'])
-# endregion
+for network in cluster_networks:
+    prism_network_details = prism_get_networks(cluster_api,cluster_user,cluster_pwd,network_name=network['name'])
+    if prism_network_details == None:
+        if 'ipam' in network:
+            prism_create_network(cluster_api,cluster_user,cluster_pwd,network['name'],network['vlan'],network['ipam']['address'],network['ipam']['gateway'],network['ipam']['prefix'],network['ipam']['pool'])
+        else:
+            prism_create_network(cluster_api,cluster_user,cluster_pwd,network['name'],network['vlan'])
+    else:
+        print("Netowrk {} already created on Nutanix cluster {}".format(network['name'],cluster_api))
+#endregion
 
 # region upload images (PC and ECN)
 for image in cluster_images:
-    prism_container_uuid = prism_get_container_uuid(cluster_api,cluster_user,cluster_pwd,image['container'])
-    image_task = prism_upload_image_url(cluster_api,cluster_user,cluster_pwd,image['name'],image['description'],image['url'],prism_container_uuid)
-    image_task_uuid = image_task['taskUuid']
-    prism_monitor_task_v2(cluster_api,cluster_user,cluster_pwd,image_task_uuid,retry_delay_secs=10,max_attemps=30)
+    prism_image_details = prism_get_images(cluster_api,cluster_user,cluster_pwd,image_name=image['name'])
+    if prism_image_details == None:
+        prism_container_uuid = prism_get_container_uuid(cluster_api,cluster_user,cluster_pwd,image['container'])
+        image_task = prism_upload_image_url(cluster_api,cluster_user,cluster_pwd,image['name'],image['description'],image['url'],prism_container_uuid)
+        image_task_uuid = image_task['taskUuid']
+        prism_monitor_task_v2(cluster_api,cluster_user,cluster_pwd,image_task_uuid,retry_delay_secs=10,max_attemps=30)
+    else:
+        print("Image {} already uploaded on Nutanix cluster {}".format(image['name'],cluster_api))
 # endregion
