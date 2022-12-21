@@ -19,6 +19,7 @@ cluster_eula_username = json_config['eulas']['username']
 cluster_eula_companyname = json_config['eulas']['company']
 cluster_eula_jobtitle= json_config['eulas']['jobtitle']
 cluster_pulse = json_config['pulse']
+cluster_dsip = json_config['cluster']['data_service_ip']
 
 # main
 
@@ -30,10 +31,19 @@ else:
     print("Eulas aready accepted..")
 # endregion
 
-# # region pulse
+# region pulse
 prism_pulse_status = prism_get_pulse(cluster_api,cluster_user,cluster_pwd)
 if prism_pulse_status['isPulsePromptNeeded'] != False or prism_pulse_status['enable'] != cluster_pulse:
-    prism_enable_pulse(cluster_api,cluster_user,cluster_pwd,enable_pulse=False)
+    prism_enable_pulse(cluster_api,cluster_user,cluster_pwd,cluster_pulse)
 else:
     print("Pulse already configured properly..")
-# # endregion
+# endregion
+
+# region data service ip
+cluster_details = prism_get_cluster(cluster_api,cluster_user,cluster_pwd)
+if cluster_details['clusterExternalDataServicesIPAddress'] != cluster_dsip:
+    prism_set_dsip(cluster_api,cluster_user,cluster_pwd,cluster_dsip)
+else:
+    print("Cluster Data Service IP already configured..")
+
+# endregion

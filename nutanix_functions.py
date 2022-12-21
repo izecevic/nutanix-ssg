@@ -543,4 +543,65 @@ def prism_accept_eula(api_server,username,secret,eula_username,eula_companyname,
     return resp
 # endregion
 
+# region prism_get_cluster
+def prism_get_cluster(api_server,username,secret):
+    """
+        Retrieve Cluster details on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+         Cluster details (part of the json response)
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/cluster/"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    #endregion
+
+    # make the call
+    print("Getting cluster details on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    return resp
+# endregion
+
+# region configure data service ip
+def prism_set_dsip(api_server,username,secret,cluster_dsip):
+    """
+        Configure a Data Service IP (DSIP) on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        cluster_dsip: Data service IP
+        
+    Returns:
+         True or False
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/cluster/"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "PATCH"
+    payload = {'clusterExternalDataServicesIPAddress': cluster_dsip}
+    #endregion
+
+    # make the call
+    print("Configuring a Data Service IP on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
+# endregion
+
+
 # endregion
