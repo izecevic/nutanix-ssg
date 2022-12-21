@@ -346,7 +346,7 @@ def foundation_monitor_progress (api_server,username=None,secret=None,max_attemp
         retry_delay_secs: default 60 seconds
         
     Returns:
-        None
+        Success or Failure
     """
 
     # variables
@@ -410,6 +410,137 @@ def prism_update_default_pwd(api_server,new_secret,username='admin',default_secr
     print("Updating default Prism admin password on Nutanix cluster {}".format(api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,default_secret,headers,payload)
+# endregion
+
+# region get pulse
+def prism_get_pulse(api_server,username,secret):
+    """
+        Retrieve pulse details on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+         Pulse details (part of the json response)
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/pulse"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    #endregion
+
+    # make the call
+    print("Getting Pulse details on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    return resp
+# endregion
+
+# region enable pulse
+def prism_enable_pulse(api_server,username,secret,enable_pulse):
+    """
+        Enable Pulse on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        enable_pulse: True or False
+        
+    Returns:
+         Eulas details (part of the json response)
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/pulse"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "PUT"
+    payload = {
+        'enable':enable_pulse, 
+        'enableDefaultNutanixEmail':False, 
+        'isPulsePromptNeeded':False, 
+        'remindLater':False
+    }
+    #endregion
+
+    # make the call
+    print("Configuring Pulse on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
+# endregion
+
+# region prism_get_eula
+def prism_get_eula(api_server,username,secret):
+    """
+        Retrieve eulas details on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+         Eulas details (part of the json response)
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/eulas"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    #endregion
+
+    # make the call
+    print("Getting Eula details on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    return resp
+# endregion
+
+# region prism_accept_eula
+def prism_accept_eula(api_server,username,secret,eula_username,eula_companyname,eula_jobtitle):
+    """
+        Accept eulas on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        eula_username: Username for the eulas
+        eula_companyname: Company Name for the eulas
+        eula_jobtitle: Job Title for the Eulas
+        
+    Returns:
+         True
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/eulas/accept"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'username': eula_username,
+        'companyName': eula_companyname,
+        'jobTitle': eula_jobtitle
+    }
+    #endregion
+
+    # make the call
+    print("Accepting Eulas on Nutanix cluster {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
 # endregion
 
 # endregion

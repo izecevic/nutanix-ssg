@@ -3,8 +3,9 @@
     "user": "admin",
     "pwd": "MyPassword123!",
     "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
+    "pulse": true,
     "cluster":{
-        "virtual_ip":"10.48.69.10",
+        "virtual_ip":"10.48.69.6",
         "data_service_ip":"10.48.69.11",
         "name":"superman",
         "dns": "10.48.104.10",
