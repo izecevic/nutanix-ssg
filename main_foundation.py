@@ -12,9 +12,9 @@ json_config = json.load(open(file_config))
 foundation_api = json_config['foundation_ip']
 foundation_aos = json_config['cluster']['nos_package']
 foundation_config = json_config['cluster']
-cluster_api = json_config['cluster']['virtual_ip']
-cluster_user = json_config['user']
-cluster_pwd = json_config['pwd']
+prism_api = json_config['cluster']['virtual_ip']
+prism_user = json_config['user']
+prism_pwd = json_config['pwd']
 
 # main
 # region get nutanix aos package
@@ -40,10 +40,10 @@ foundation_monitor_progress(foundation_api)
 
 # region update prism admin default password
 print("\n--- Update prism default password section ---")
-cluster_details = prism_get_cluster(cluster_api,cluster_user,cluster_pwd)
-print(cluster_details)
-if cluster_details == 401: # (UNAUTHORIZED)
-    prism_update_default_pwd(cluster_api,cluster_pwd,usernane="admin",default_secret="nutanix/4u")
+prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
+print(prism_cluster_details)
+if prism_cluster_details == 401: # (UNAUTHORIZED)
+    prism_update_default_pwd(prism_api,prism_pwd,usernane="admin",default_secret="nutanix/4u")
 else:
-    print("Default password already updated on Nutanix cluster {}".format(cluster_api))
+    print("Default password already updated on Nutanix cluster {}".format(prism_api))
 # endregion

@@ -119,12 +119,17 @@ def process_request(url, method, user, password, headers, payload=None, secure=F
     if response.status_code == 401:
         print("status code: {0}".format(response.status_code))
         print("reason: {0}".format(response.reason))
-        return response.status_code
+        return (response.status_code)
     elif response.status_code == 500:
         print("status code: {0}".format(response.status_code))
         print("reason: {0}".format(response.reason))
         print("text: {0}".format(response.text))
         exit(response.status_code)
+    elif response.status_code == 404:
+        print("status code: {0}".format(response.status_code))
+        print("reason: {0}".format(response.reason))
+        print("text: {0}".format(response.text))
+        return (response.status_code)
     else:
         print("Request failed!")
         print("status code: {0}".format(response.status_code))
@@ -1009,6 +1014,7 @@ def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=
     # endregion
 
     # track task process
+    print("Monitoring task uuid progress {} on {}".format(task_uuid,api_server))
     while attempt <= max_attempts:
         # make the api call
         print("Making a {} API call to {}".format(method, url))
@@ -1027,6 +1033,7 @@ def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=
             print("Let's wait for {} seconds..".format(retry_delay_secs))
             attempt +=1
             sleep(retry_delay_secs)
+
     print ("Error: Exceeded max attempts {}".format(max_attempts))
 
     # return
@@ -1689,7 +1696,7 @@ def pc_create_role(api_server,username,secret,role_name,permissions_uuid_list):
         permission_uuid_list: list of permissions uuid to include on the role.
         
     Returns:
-        A list of permissions (entities part of the json response).
+        Role creation containing a task exeuction (json response).
     """
 
     # region prepare the api call
@@ -1729,4 +1736,231 @@ def pc_create_role(api_server,username,secret,role_name,permissions_uuid_list):
     return resp
 # endregion
 
+# region pc_get_roles
+def pc_get_roles(api_server,username,secret,role_name=None):
+    """
+        Retrieve a list of roles on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        role_name: role name to retrieve
+        
+    Returns:
+        A list of roles (entities part of the json response).
+    """
+
+    # variables
+    roles_list = []
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/roles/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = { 'kind':'role','length':500 }
+    # endregion
+
+    # Making the call
+    print("Retrieving roles details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # processing
+    if role_name == None:
+        print("Returning all roles on {}".format(api_server))
+        roles_list.extend(resp['entities'])
+    else: 
+        for role in resp['entities']:
+            if role['status']['name'] == role_name:
+                print("Return single role {} on {}".format(role_name,api_server))
+                roles_list.append(role)
+
+    # return
+    return roles_list
+# endregion
+
+# region pc_import_image_from_pe
+def pc_import_image_from_pe(api_server,username,secret,cluster_uuid,image_uuid=None):
+    """
+        Import a list of images fron Prism Element on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        cluster_uuid: uuid of the cluster on which the images are.
+        image_uuid: uuid of a specific image to import.
+        
+    Returns:
+        A task execution (json response).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/batch"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'action_on_failure': 'CONTINUE',
+        'execution_order': 'NON_SEQUENTIAL',
+        'api_request_list': [
+            {
+                'operation': 'POST',
+                'path_and_params': '/api/nutanix/v3/images/migrate',
+                'body': {
+                    'image_reference_list': [],
+                    'cluster_reference': {
+                        'uuid': cluster_uuid,
+                        'kind': 'cluster',
+                        'name': 'string'
+                    }
+                }
+            }
+        ],
+        'api_version': '3.0'
+    }
+    # endregion
+
+    # update payload (in case image_uuid provided)
+    if image_uuid:
+        image_payload =  {
+            'uuid': image_uuid,
+            'kind': 'image',
+            'name': 'string'
+        }
+        
+        payload['api_request_list'][0]['body']['image_reference_list'].append(image_payload)
+
+    # Making the call
+    print("Importing images from PE to PC {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # return
+    return resp
+# endregion
+
+# region prism_get_cluster
+def pc_get_cluster(api_server,username,secret,cluster_name=None):
+    """
+        Retrieve Prism Element Clusters details on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        cluster_name: Cluster name to retrieve.
+        
+    Returns:
+         Prism Element cluster details (entities part of the json response)
+    """
+
+    # variables
+    clusters_list = []
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/clusters/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = { 'kind':'cluster','length':500 }
+    # endregion
+
+    # Making the call
+    print("Retrieving clusters details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # processing
+    if cluster_name == None:
+        print("Returning all clusters on {}".format(api_server))
+        clusters_list.extend(resp['entities'])
+    else: 
+        for cluster in resp['entities']:
+            if cluster['status']['name'] == cluster_name:
+                print("Return single cluster {} on {}".format(cluster_name,api_server))
+                clusters_list.append(cluster)
+
+    # return
+    return clusters_list
+# endregion
+
+# region prism_get_cluster_uuid
+def pc_get_cluster_uuid(api_server,username,secret,cluster_name):
+    """
+        Retrieve Prism Element cluster uuid from Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        cluster_name: cluster name uuid to retrieve.
+        
+    Returns:
+         Prism Element cluster uuid (json response)
+    """
+
+    # variables
+    cluster_uuid = []
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/clusters/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = { 'kind':'cluster','length':500 }
+    # endregion
+
+    # Making the call
+    print("Retrieving clusters details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # processing
+    for cluster in resp['entities']:
+        if cluster['status']['name'] == cluster_name:
+            cluster_uuid = cluster['metadata']['uuid']
+
+    # return
+    print("Return cluster uuid {} found on {}".format(cluster_uuid,api_server))
+    return cluster_uuid
+# endregion
+
+# region pc_get_roles
+def pc_get_image_by_uuid(api_server,username,secret,image_uuid):
+    """
+        Retrieve image details  on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        image_uuid: uuid of the image to retrieve.
+        
+    Returns:
+        A list of roles (entities part of the json response).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/images/{}".format(image_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # Making the call
+    print("Retrieving image details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    
+    # return
+    return resp
+# endregion
 # endregion
