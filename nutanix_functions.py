@@ -3006,4 +3006,49 @@ def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,end
     # return
     return resp
 # endregion
+
+# region pc_get_marketplace_items
+def pc_get_marketplace_items(api_server,username,secret,marketplace_item_name=None):
+    """
+        Retrieve marketplace items details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        marketplace_item_name: specific runbook details to retrieve.
+        
+    Returns:
+        A list of marketplace_item details (entities part of the json response).
+    """
+    
+    # variables
+    marketplace_item_list = []
+    
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/calm_marketplace_items/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'marketplace_item'}
+    #endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # filtering
+    if marketplace_item_name == None:
+        print("Return all marketplace_item..")
+        marketplace_item_list.extend(resp['entities'])
+    else: 
+        for marketplace_item in resp['entities']:
+            if marketplace_item['status']['name'] == marketplace_item_name:
+                print("Return single marketplace_item")
+                marketplace_item_list.append(marketplace_item)
+
+    # return
+    return marketplace_item_list
+# endregion
 # endregion
