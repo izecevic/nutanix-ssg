@@ -26,13 +26,13 @@ if foundation_aos not in foundation_get_aos_details:
     exit(1)
 # endregion
 
-# region foundation launch
+# region prepare foundation payload
 print("\n--- Prepare foundation payload ---")
 foundation_payload = foundation_generate_image_payload(foundation_config)
 print(json.dumps(foundation_payload,indent=4))
 # endregion
 
-# region foundation launch
+# region foundation imaging
 print("\n--- Trigger foundation process ---")
 foundation_image_nodes(foundation_api,foundation_payload)
 foundation_monitor_progress(foundation_api)
