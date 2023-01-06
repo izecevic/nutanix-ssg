@@ -2964,7 +2964,6 @@ def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbo
     # Making the call
     print("Uploading runbook {} on {}".format(runbook_name,api_server))
     print("Making a {} API call to {}".format(method, url))
-    #resp = requests.post(url,auth=(username,secret),headers=headers,data=payload,files=files,verify=False)
     resp = process_request(url,method,username,secret,headers,payload,upload_files=files)
 
     # return
@@ -3002,7 +3001,6 @@ def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,end
     # Making the call
     print("Uploading endpoint {} on {}".format(endpoint_name,api_server))
     print("Making a {} API call to {}".format(method, url))
-    #resp = requests.post(url,auth=(username,secret),headers=headers,data=payload,files=files,verify=False)
     resp = process_request(url,method,username,secret,headers,payload,upload_files=files)
    
     # return
