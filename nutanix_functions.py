@@ -4,19 +4,19 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # region functions
 # region function process_request
-def process_request(url, method, user, password, headers, payload=None, secure=False, binary=False, return_cookies=False):
+def process_request(url, method, user, password, headers, payload=None, secure=False, upload_binary=False, return_cookies=False, upload_files=None):
     """
     Processes a web request and handles result appropriately with retries.
     Returns the content of the web request if successfull.
     """
-    if payload != None and binary == False:
-       payload = json.dumps(payload)
-    elif payload != None and binary == True:
-        payload = payload
+    if payload != None and (upload_binary == True or upload_files != None):
+       payload = payload
+    elif payload != None and upload_binary == False:
+        payload = json.dumps(payload)
 
     #configuring web request behavior
-    if binary == True: 
-        timeout = 9000 
+    if upload_binary == True: 
+        timeout = 9000 # 15 mins (usually for binary uploads)
     else:
         timeout = 30
     retries = 5
@@ -39,7 +39,8 @@ def process_request(url, method, user, password, headers, payload=None, secure=F
                     data=payload,
                     auth=(user, password),
                     verify=secure,
-                    timeout=timeout
+                    timeout=timeout,
+                    files=upload_files
                 )
             elif method == 'PUT':
                 response = requests.put(
@@ -676,9 +677,11 @@ def prism_get_networks(api_server,username,secret,network_name=None):
         net_list.extend(resp['entities'])
     else: 
         for network in resp['entities']:
+            print("test1")
             if network['name'] == network_name:
                 print("Returning network {} on {}".format(network_name,api_server))
                 net_list.append(network)
+                break
     
     # return
     return net_list
@@ -686,7 +689,8 @@ def prism_get_networks(api_server,username,secret,network_name=None):
 
 # region prism_get_network_uuid
 def prism_get_network_uuid(api_server,username,secret,network_name):
-    """Retreive provided network name uuid
+    """
+        Retreive provided network name uuid
 
     Args:
         api_server: The IP or FQDN of Prism.
@@ -810,6 +814,7 @@ def prism_get_containers(api_server,username,secret,container_name=None):
             if container['name'] == container_name:
                 print("Returning container {} on {}".format(container_name,api_server))
                 containers_list.append(container)
+                break
 
     # return
     return containers_list
@@ -818,7 +823,7 @@ def prism_get_containers(api_server,username,secret,container_name=None):
 # region prism_get_container_uuid
 def prism_get_container_uuid(api_server,username,secret,container_name):
     """
-        Retreive container uuid
+        Retreive provided container uuid
 
     Args:
         api_server: The IP or FQDN of Prism.
@@ -887,9 +892,46 @@ def prism_get_vms(api_server,username,secret,vm_name=None):
             if vm['vmName'] == vm_name:
                 print("Returning vm {} on {}".format(vm_name,api_server))
                 vms_list.append(vm)
+                break
 
     # return
     return vms_list
+# endregion
+
+# region prism_get_vms
+def prism_set_vm_powerstate(api_server,username,secret,vm_uuid,vm_powerstate):
+    """
+        Retreive the list of vms from Prism Element.
+        If a container_name is specified, only details for that given container will be returned.
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        vm_uuid: uuid of the virutal machine.
+        vm_powerstate: Powerstate of the virutal machine (off, on, powercycle, reset, acpi_shutdown, acpi_reset)
+        
+    Returns:
+         A list of vms (entities part of the json response).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/vms/{}/set_power_state".format(vm_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'transition': vm_powerstate} 
+    # endregion
+
+    # Making the call
+    print("Changing VM uuid {} powerstate on {}".format(vm_uuid, api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+  
+    # return
+    return resp
 # endregion
 
 # region prism_get_images
@@ -933,9 +975,43 @@ def prism_get_images(api_server,username,secret,image_name=None):
             if image['name'] == image_name:
                 print("Return single image {} on {}".format(image_name,api_server))
                 images_list.append(image)
+                break
 
     # return
     return images_list
+# endregion
+
+# region prism_get_image_uuid
+def prism_get_image_uuid(api_server,username,secret,image_name):
+    """
+        Retreive provided image name uuid
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        image_name: Name of the image.
+        
+    Returns:
+         uuid of the provided image name (string).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/images/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'image','filter':'name=={}'.format(image_name)} 
+    # endregion
+
+    # Making the call
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    print ("Return image {} uuid".format(image_name))
+    return resp['entities'][0]['metadata']['uuid']
 # endregion
 
 # region prism_upload_image_url
@@ -1207,6 +1283,7 @@ def prism_get_directory(api_server,username,secret,directory_domain=None):
             if directory['domain'] == directory_domain:
                 print("Returning directory {} on {}".format(directory_domain,api_server))
                 directories_list.append(directory)
+                break
     
     # return
     return directories_list
@@ -1359,7 +1436,7 @@ def prism_software_metadata_validate(api_server,username,secret,metadata_type,me
     # Making the call
     print("Validating software {} metadata on {}".format(metadata_type,api_server))
     print("Making a {} API call to {}".format(method, url))
-    resp = process_request(url,method,username,secret,headers,payload,binary=True,return_cookies=True)
+    resp = process_request(url,method,username,secret,headers,payload,upload_binary=True,return_cookies=True)
 
     # return
     print("Returning Cookies..")
@@ -1404,7 +1481,7 @@ def prism_software_upload(api_server,username,secret,metadata_file,binary_file):
     # Making the call
     print("Uploading software {} version {} on {}".format(metadata_type,metadata_version,api_server))
     print("Making a {} API call to {}".format(method, url))
-    resp = process_request(url,method,username,secret,headers,payload,binary=True)
+    resp = process_request(url,method,username,secret,headers,payload,upload_binary=True)
 
     # return
     return resp
@@ -1456,8 +1533,8 @@ def prism_create_pc_vm(api_server,username,secret,pc_version,pc_name,pc_ip,pc_cp
         pc_name: Name for the Prism Central VM.
         pc_ip: List (array) of IP addresses for the Prism Central VM.
         pc_cpu: Number of vCPUs for the Prism Central VM.
-        pc_mem: Memory (bytes) for the Prism Central VM.
-        pc_disk: Disk size (bytes) for the Prism Central VM.
+        pc_mem: Memory (GB) for the Prism Central VM.
+        pc_disk: Disk size (GB) for the Prism Central VM.
         pc_dns: List (array) of dns server for the Prism Central VM.
         pc_network_mask: Network netmask for the Prism Central VM.
         pc_network_gateway: Network gayeway for the Prism Central VM.
@@ -1504,6 +1581,91 @@ def prism_create_pc_vm(api_server,username,secret,pc_version,pc_name,pc_ip,pc_cp
 
     # Making the call
     print("Deploying a Prism Central VM named {} on {}".format(pc_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # return
+    return resp
+# endregion
+
+# region prism_create_vm_from_image
+def prism_create_vm_from_image(api_server,username,secret,vm_name,vm_cpu,vm_mem,image_uuid,network_uuid,vm_ip=None):
+    """
+        Create a VM  on Prism Element 
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        vm_name: Name of the VM to provision.
+        vm_cpu: Number of vCPUs for the VM to provision.
+        vm_mem: Number of memory (GB) for the VM to provision.
+        image_uuid: Image uuid the VM should be based on.
+        network_uuid: Network uuid on which the Prism Central VM will be provisioned.
+        vm_ip (Optional): Ip address for the VM to provision.
+        
+    Returns:
+        Task operation (part of the json response)
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/vms"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'spec': {
+            'name': vm_name,
+            'resources': {
+                'num_sockets': int(vm_cpu),
+                'num_vcpus_per_socket': 1,
+                'memory_size_mib': (int(vm_mem)*1024),
+                'power_state': 'OFF',
+                'disk_list': [
+                    {
+                        'device_properties': {
+                            'device_type': 'DISK',
+                            'disk_address': {
+                                'adapter_type': 'SCSI',
+                                'device_index': 0
+                            }
+                        },
+                        'data_source_reference': {
+                            'kind': 'image',
+                            'uuid': image_uuid
+                        }
+                    }
+                ],
+                'nic_list': [
+                    {
+                        'subnet_reference': {
+                            'kind': 'subnet',
+                            'uuid': network_uuid
+                        },
+                        'ip_endpoint_list': []
+                    }
+                ]
+                # 'guest_customization': {
+                #     'cloud_init': {
+                #         'user_data': 'IyBjbG91ZC1jb25maWcKaG9zdG5hbWU6IHRlc3Q='
+                #     }
+                # }
+            }
+        },
+        'metadata': {
+            'kind': 'vm'
+        },
+        'api_version': '3.0'
+    }
+    # endregion
+
+    # update payload with vm_ip info
+    if vm_ip:
+        payload_vm_ip = {'ip': vm_ip }
+        payload['spec']['resources']['nic_list'][0]['ip_endpoint_list'].append(payload_vm_ip)
+
+    # Making the call
+    print("Creating VM VM named {} on {}".format(vm_name,api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
     
@@ -1760,7 +1922,7 @@ def pc_get_roles(api_server,username,secret,role_name=None):
     api_server_endpoint = "/api/nutanix/v3/roles/list"
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    payload = { 'kind':'role','length':500 }
+    payload = { 'kind':'role','length': 200 }
     # endregion
 
     # Making the call
@@ -1777,9 +1939,43 @@ def pc_get_roles(api_server,username,secret,role_name=None):
             if role['status']['name'] == role_name:
                 print("Return single role {} on {}".format(role_name,api_server))
                 roles_list.append(role)
+                break
 
     # return
     return roles_list
+# endregion
+
+# region pc_get_role_uuid
+def pc_get_role_uuid(api_server,username,secret,role_name=None):
+    """
+        Retrieve a role uuid on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        role_name: Role name to retrieve
+        
+    Returns:
+        Role uuid (string).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/roles/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'role','filter':'name=={}'.format(role_name)}
+    # endregion
+
+    # Making the call
+    print("Retrieving role {} uuid on {}".format(role_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # returning
+    return resp['entities'][0]['metadata']['uuid']
 # endregion
 
 # region pc_import_image_from_pe
@@ -1885,6 +2081,7 @@ def pc_get_cluster(api_server,username,secret,cluster_name=None):
             if cluster['status']['name'] == cluster_name:
                 print("Return single cluster {} on {}".format(cluster_name,api_server))
                 clusters_list.append(cluster)
+                break
 
     # return
     return clusters_list
@@ -1914,7 +2111,7 @@ def pc_get_cluster_uuid(api_server,username,secret,cluster_name):
     api_server_endpoint = "/api/nutanix/v3/clusters/list"
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    payload = { 'kind':'cluster','length':500 }
+    payload = { 'kind':'cluster','length': 200 }
     # endregion
 
     # Making the call
@@ -1932,7 +2129,7 @@ def pc_get_cluster_uuid(api_server,username,secret,cluster_name):
     return cluster_uuid
 # endregion
 
-# region pc_get_roles
+# region pc_get_image_by_uuid
 def pc_get_image_by_uuid(api_server,username,secret,image_uuid):
     """
         Retrieve image details  on Prism Central
@@ -1960,6 +2157,854 @@ def pc_get_image_by_uuid(api_server,username,secret,image_uuid):
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers)
     
+    # return
+    return resp
+# endregion
+
+# region pc_get_projects
+def pc_get_projects(api_server,username,secret,project_name=None):
+    """
+        Retrieve projects details on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_name: specific project details to retrieve.
+        
+    Returns:
+        A list of project details (entities part of the json response).
+    """
+    
+    # variables
+    projects_list = []
+    
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'project'}
+    # endregion
+
+    # Making the call
+    print("Retrieving project details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # processing
+    if project_name == None:
+        print("Return all projects..")
+        projects_list.extend(resp['entities'])
+    else: 
+        for project in resp['entities']:
+            if project['status']['name'] == project_name:
+                print("Return single project")
+                projects_list.append(project)
+                break
+    # return
+    return projects_list
+
+# endregion
+
+# region get pc_get_projects_internal
+def pc_get_projects_internal(api_server,username,secret,project_uuid):
+    """
+        Retrieve projects internal details on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: uuid of the project
+        
+    Returns:
+        Project internal details (json response).
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects_internal/{}".format(project_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # Making the call
+    print("Retrieving project internal {} details on".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # return
+    return resp
+# endregion
+
+# region get pc_get_project_uuid
+def pc_get_project_uuid(api_server,username,secret,project_name):
+    """
+        Retrieve project uuid on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_name: project details to retrieve.
+        
+    Returns:
+        Project uuid (string).
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'project','filter': 'name=={}'.format(project_name)}
+    # endregion
+
+    # Making the call
+    print("Retrieving project {} uuid on {}".format(project_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
+# region pc_get pc_get_account_uuid
+def pc_get_account_uuid(api_server,username,secret,account_name="NTNX_LOCAL_AZ"):
+    """
+        Retrieve account uuid on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        account_name: account details to retrieve. (default PC)
+        
+    Returns:
+        account uuid (string).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/accounts/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind': 'account',"filter":"name=={}".format(account_name)}
+    # endregion
+
+    # Making the call
+    print("Retrieving account {} uuid on {}".format(account_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # returning
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
+# region pc_get_subnet_uuid
+def pc_get_subnet_uuid(api_server,username,secret,subnet_name):
+    """
+        Retrieve subnet uuid on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        subnet_name: subnet details to retrieve.
+        
+    Returns:
+        subnet uuid (string).
+    """
+    
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/subnets/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'subnet','filter': 'name=={}'.format(subnet_name)}
+    # endregion
+
+    # make the call
+    print("Retrieving subnet {} uuid on {}".format(subnet_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
+# region pc_create_project
+def pc_create_project(api_server,username,secret,project_name):
+    """
+        Creates a project on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_name: Name of the project to create
+        
+    Returns:
+        Project creation response (json response).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects_internal"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'spec': {
+            'project_detail': {
+                'name': project_name,
+                'resources': {}
+            },
+            'user_list': [],
+            'user_group_list': [],
+            'access_control_policy_list': []
+        },
+        'api_version': '3.0',
+        'metadata': {'kind': 'project'}
+    }
+    # endregion
+
+    # Making the call
+    print("Creatint project {} on {}".format(project_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+#region get pc_get_directory_service_uuid
+def pc_get_directory_service_uuid(api_server,username,secret,directory_service_name):
+    """
+        Retrieves directory service uuid on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        directory_service_name: Name of the directory service to retrieve
+        
+    Returns:
+        Uuid of the directory service (string).
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/directory_services/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'filter':'name=={}'.format(directory_service_name)}
+    # endregion
+
+    # Making the call
+    print("Retrieving directory service uuid {} on {}".format(directory_service_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # return
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
+# region pc_calm_group_search
+def pc_calm_search_users(api_server,username,secret,directory_service_uuid,search_name):
+    """
+        Retrieves distinguished_name group on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        directory_service_uuid: Uuid of the directory service
+        group_name: group name to retrieve on the directory service
+        
+    Returns:
+        distinguished_name group (string).
+    """
+    
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/calm/v3.0/calm_users/search"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'query':search_name,
+        'provider_uuid': directory_service_uuid,
+        'user_type':"ACTIVE_DIRECTORY",
+        'is_wildcard_search':True
+    }
+    # endregion
+
+    # Making the call
+    print("Retrieving {} uuid".format(search_name))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # filterng
+    for entity in resp['search_result_list']:
+        if entity['type'] == "Group":
+            for attribute in entity['attribute_list']:
+                if attribute['name'] == "distinguishedName":
+                    search_value = attribute['value_list'][0]
+        elif entity['type'] == "Person":
+            for attribute in entity['attribute_list']:
+                if attribute['name'] == "userPrincipalName":
+                    search_value = attribute['value_list'][0]
+    
+    # return
+    return search_value
+# endregion
+
+# region pc_get_acp_user
+def pc_get_acp_user_id(api_server,username,secret,acp_user):
+    """
+        Retrieves distinguished_name user entity_id on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        acp_user: Name of user to retrieve
+        
+    Returns:
+        distinguished_name group id (string).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/groups"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'entity_type':'abac_user_capability',
+        'group_member_attributes':[{'attribute':'user_uuid'}],
+        'query_name':'prism:BaseGroupModel',
+        'filter_criteria':'username=={}'.format(acp_user)
+    }
+    # endregion
+
+    # Making the call
+    print("Retreiving user uuid {}".format(acp_user))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    print(resp)
+
+    # return
+    return resp['group_results'][0]['entity_results'][0]['entity_id'] 
+# endregion
+
+# region pc_get_acp_group
+def pc_get_acp_group_id(api_server,username,secret,acp_group):
+    """
+        Retrieves distinguished_name group entity_id on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        dn_group: Name of the dn group to retrieve
+        
+    Returns:
+        distinguished_name group id (string).
+    """
+
+    # variables
+    # calculate acp_distinguished_name variable required for the payload
+    # from CN=Developers,CN=Users,DC=ntnxlab,DC=loca to cn%3Ddevelopers%2Ccn%3Dusers%2Cdc%3Dntnxlab%2Cdc%3Dlocal
+    count = 1
+    acp_distinguished_name = ""
+    for entity in acp_group.rsplit(","):
+        entity_string = entity.lower().replace("=","%3D") # replace '=' with '%3D'
+        if count < (len(acp_group.rsplit(","))):
+            entity_string += ("%2C") #replace ',' with '%2C'  
+        acp_distinguished_name += entity_string
+        count += 1
+    
+    acp_distinguished_name.replace(" ","%20") #remove space (if any)
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/groups"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'entity_type': 'user_group',
+        'group_member_attributes': [
+            {
+                'attribute': 'uuid'
+            },
+            {
+                'attribute': 'distinguished_name'
+            }
+        ],
+        'query_name': 'prism:BaseGroupModel',
+        'filter_criteria': 'distinguished_name=={}'.format(acp_distinguished_name)
+    }
+    # endregion
+
+
+    # Making the call
+    print("Retreiving dn_group uuid {}".format(acp_group))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp['group_results'][0]['entity_results'][0]['entity_id'] 
+# endregion
+
+# region pc_set_project_acp_group
+def pc_set_project_acp_group(api_server,username,secret,project_uuid,acp_group_id,group_role_uuid):
+    """
+        Set group and role on a given Calm project
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: Uuid of the project.
+        acp_group_id: group entity id to add to the calm project.
+        group_role_uuid: role uuid to add to the calm project.
+        
+    Returns:
+        Task execution (json response).
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects_internal/{}".format(project_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # get project_json details first
+    print("Retrieving project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    project_json = resp
+
+    # update existing access_control_policy_list
+    for acccess_control_policy in project_json['spec']['access_control_policy_list']:
+        operation = {'operation': "UPDATE"}
+        acccess_control_policy.update(operation)
+
+    # payload
+    add_acp_group = {
+        'operation': 'ADD',
+        'acp': {
+            'name': 'nuCalmAcp-'+str(uuid.uuid4()),
+            'resources': {
+                'role_reference': {
+                    'uuid': group_role_uuid,
+                    'kind': 'role'
+                },
+                'user_group_reference_list': [
+                    {
+                    'kind': 'user_group',
+                    'uuid': acp_group_id
+                    }
+                ],
+                'filter_list': {
+                    'context_list': [{
+                            'scope_filter_expression_list': [
+                                {
+                                    'operator': 'IN',
+                                    'left_hand_side': 'PROJECT',
+                                    'right_hand_side': {
+                                        'uuid_list': [project_uuid]
+                                    }
+                                }
+                            ],
+                            'entity_filter_expression_list': [
+                                {
+                                    'operator': 'IN',
+                                    'left_hand_side': {
+                                        'entity_type': 'ALL'
+                                    },
+                                    'right_hand_side': {
+                                        'collection': 'ALL'
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'description': 'ACPDescription-'+str(uuid.uuid4())
+        },
+        'metadata': {
+            'kind': 'access_control_policy'
+        }
+    }
+        
+    # push acp_group to payload
+    project_json['spec']['access_control_policy_list'].append(add_acp_group)
+    add_acp_group = {'kind': 'user_group','uuid': acp_group_id}
+    project_json['spec']['project_detail']['resources']['external_user_group_reference_list'].append(add_acp_group)
+
+    # update json
+    project_json.pop('status', None) # don't need status for the update
+    project_json['metadata'].pop('owner_reference', None)
+    project_json['metadata'].pop('create_time', None)
+    payload = project_json
+
+    # updating the project
+    method = "PUT"
+    print("Updating project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region pc_set_project_acp_user
+def pc_set_project_acp_user(api_server,username,secret,project_uuid,acp_user_id,user_role_uuid):
+    """
+        Set group and role on a given Calm project
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: Uuid of the project.
+        acp_user_id: user entity id to add to the calm project.
+        user_role_uuid: role uuid to add to the calm project.
+        
+    Returns:
+        Task execution (json response).
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/projects_internal/{}".format(project_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # get project_json details first
+    print("Retrieving project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    project_json = resp
+    
+    # update existing access_control_policy_list
+    for acccess_control_policy in project_json['spec']['access_control_policy_list']:
+        operation = {'operation': "UPDATE"}
+        acccess_control_policy.update(operation)
+
+    # payload
+    add_acp_user = {
+        'operation': 'ADD',
+        'acp': {
+            'name': 'nuCalmAcp-'+str(uuid.uuid4()),
+            'resources': {
+                'role_reference': {
+                    'uuid': user_role_uuid,
+                    'kind': 'role'
+                },
+                'user_reference_list': [
+                    {
+                        'kind': 'user',
+                        'uuid': acp_user_id
+                    }
+                ],
+                'filter_list': {
+                    'context_list': [{
+                            'scope_filter_expression_list': [
+                                {
+                                    'operator': 'IN',
+                                    'left_hand_side': 'PROJECT',
+                                    'right_hand_side': {
+                                        'uuid_list': [project_uuid]
+                                        }
+                                }
+                            ],
+                            'entity_filter_expression_list': [
+                                {
+                                    'operator': 'IN',
+                                    'left_hand_side': {
+                                        'entity_type': 'ALL'
+                                        },
+                                    'right_hand_side': {
+                                        'collection': 'ALL'
+                                        }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'description': 'ACPDescription-'+str(uuid.uuid4())
+        },
+        'metadata': {'kind': 'access_control_policy'}
+    }
+
+    # push acp_user to payload
+    project_json['spec']['access_control_policy_list'].append(add_acp_user)
+    add_acp_user = {'kind': 'user','uuid': acp_user_id}
+    project_json['spec']['project_detail']['resources']['user_reference_list'].append(add_acp_user)
+
+    # update json
+    project_json.pop('status', None) # don't need status for the update
+    project_json['metadata'].pop('owner_reference', None)
+    project_json['metadata'].pop('create_time', None)
+    payload = project_json
+
+    # Making the call
+    method = "PUT"
+    print("Updating project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region create pc_set_project_infrastructure
+def pc_set_project_infrastructure(api_server,username,secret,project_uuid,account_uuid,subnet_uuid):
+    """
+        Set infrastructure resources for a given project on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: Uuid of the project.
+        account_uuid: uuid of the account (default account_name is NTNX_LOCAL_AZ (PC))
+        cluster_uuid: uuid of the cluster
+        subnet_uuid: uuid of the subnet (Default subnet for the calm project)
+        
+    Returns:
+        Task execution (json response).
+    """
+
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    method = "GET"
+    api_server_endpoint = "/api/nutanix/v3/projects_internal/{}".format(project_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    # endregion
+
+    # get project_json details first
+    print("Retrieving project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    project_json = process_request(url,method,username,secret,headers)
+
+    # region updating project payload
+    # update existing access_control_policy_list
+    for acccess_control_policy in project_json['spec']['access_control_policy_list']:
+        operation = {'operation': "UPDATE"}
+        acccess_control_policy.update(operation)
+
+    # push account and default_subnet details
+    if not project_json['spec']['project_detail']['resources']['account_reference_list']:
+        account_payload = {'kind': 'account','uuid': account_uuid}
+        project_json['spec']['project_detail']['resources']['account_reference_list'].append(account_payload)
+
+    if not project_json['spec']['project_detail']['resources']['subnet_reference_list']:
+        subnet_payload = {'kind': 'subnet','uuid': subnet_uuid}
+        project_json['spec']['project_detail']['resources']['subnet_reference_list'].append(subnet_payload)
+
+    # update json
+    project_json.pop('status', None) # don't need status for the update
+    payload = project_json
+    # endregion
+
+    # make the api call
+    method = "PUT"
+    print("Updating project {} details on {}".format(project_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region pc_get_runbooks
+def pc_get_runbooks(api_server,username,secret,runbook_name=None):
+    """
+        Retrieve runbooks details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        runbook_name: specific runbook details to retrieve.
+        
+    Returns:
+        A list of runbook details (entities part of the json response).
+    """
+    
+    # variables
+    runbook_list = []
+    
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/runbooks/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'runbook'}
+    #endregion
+
+    # Making the call
+    print("Retrieving runbook details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # filtering
+    if runbook_name == None:
+        print("Return all runbooks..")
+        runbook_list.extend(resp['entities'])
+    else: 
+        for runbook in resp['entities']:
+            if runbook['status']['name'] == runbook_name:
+                print("Return single runbook")
+                runbook_list.append(runbook)
+                break
+
+    # return
+    return runbook_list
+# endregion
+
+# region pc_get_endpoints
+def pc_get_endpoints(api_server,username,secret,endpoint_name=None):
+    """
+        Retrieve endpoints details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        endpoint_name: specific runbook details to retrieve.
+        
+    Returns:
+        A list of endpoint details (entities part of the json response).
+    """
+    
+    # variables
+    endpoint_list = []
+    
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/endpoints/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'endpoint'}
+    #endregion
+
+    # Making the call
+    print("Retrieving runbook details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # filtering
+    if endpoint_name == None:
+        print("Return all endpoints..")
+        endpoint_list.extend(resp['entities'])
+    else: 
+        for endpoint in resp['entities']:
+            if endpoint['status']['name'] == endpoint_name:
+                print("Return single endpoint")
+                endpoint_list.append(endpoint)
+                break
+    
+    # return
+    return endpoint_list
+
+# endregion
+
+# region pc_upload_runbook
+def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbook_json_file,passphrase=None):
+    """
+        Upload a runbook on Calm (json file)
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: Project uuid.
+        runbook_json_file: Runbook json file to upload.
+        passphrase (Optional): Runbook's passphrase.
+        
+    Returns:
+        Runbook details (json response).
+    """
+
+    # region prepare the api call
+    headers = {'Accept':'*/*'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/runbooks/import_file"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    # endregion
+
+    # open the runbook as binary_file
+    files = [('file',(runbook_json_file, open(runbook_json_file, 'rb'),'application/json'))]
+    payload = {'name': runbook_name, 'project_uuid': project_uuid,'passphrase': passphrase}
+
+    # Making the call
+    print("Uploading runbook {} on {}".format(runbook_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    #resp = requests.post(url,auth=(username,secret),headers=headers,data=payload,files=files,verify=False)
+    resp = process_request(url,method,username,secret,headers,payload,upload_files=files)
+
+    # return
+    return resp
+# endregion
+
+# region upload endpoint
+def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,endpoint_json_file,passphrase=None):
+    """
+        Upload a runbook on Calm (json file)
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        project_uuid: Project uuid.
+        endpoint_json_file: Endpoint json file to upload.
+        passphrase (Optional): Endpoint's passphrase.
+        
+    Returns:
+        Endpoint details (json response).
+    """
+    #region prepare the api call
+    headers = {'Accept':'*/*'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/endpoints/import_file"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    #endregion
+
+    # open the endpoint as binary_file
+    files = [('file',(endpoint_json_file, open(endpoint_json_file, 'rb'),'application/json'))]
+    payload = {'name': endpoint_name, 'project_uuid': project_uuid,'passphrase': passphrase}
+
+    # Making the call
+    print("Uploading endpoint {} on {}".format(endpoint_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    #resp = requests.post(url,auth=(username,secret),headers=headers,data=payload,files=files,verify=False)
+    resp = process_request(url,method,username,secret,headers,payload,upload_files=files)
+   
     # return
     return resp
 # endregion
