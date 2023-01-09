@@ -1,7 +1,7 @@
 {
     "foundation_ip":"10.48.108.34",
     "user": "admin",
-    "pwd": "MyPassword123!",
+    "pwd": "nx2Tech086!",
     "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
     "pulse": true,
     "networks":[
@@ -23,12 +23,57 @@
             "url": "http://download.nutanix.com/calm/CentOS-7-x86_64-GenericCloud.qcow2"
           }
       ],
+      "directory":[
+        {
+            "name":"ntnxlab","domain":"ntnxlab.local","url":"ldap://10.48.69.142:389", "svc_user":"administrator@ntnxlab.local", "svc_pwd": "nutanix/4u",
+            "role_mapping":[
+                {"name":"ROLE_USER_ADMIN", "type":"GROUP", "value": "test1"},
+                {"name":"ROLE_CLUSTER_ADMIN", "type":"GROUP", "value": "test2"}
+            ]
+        }
+    ],
+    "pc":{
+        "name": "pc",
+        "virtual_ip":"10.48.69.20",
+        "network_name":"Primary",
+        "container_name": "SelfServiceContainer",
+        "network_mask": "255.255.254.0",
+        "network_gateway": "10.48.68.1",
+        "metadata_file":"generated-pc.2021.9.0.5-metadata.json",
+        "binary_file":"pc.2021.9.0.5.tar"
+      },
+    "calm":[
+        {
+            "project_name": "myproject",
+            "project_network":"Primary",
+            "project_permissions":[
+                {"name": "SSP Developers", "type": "group", "role": "Project Admin", "directory": "ntnxlab"},
+                {"name": "devuser04", "type": "user", "role": "Consumer", "directory": "ntnxlab"}
+            ],
+            "runbook": {
+                "name": "runbook_ecn",
+                "json_file": "runbook_ecn.json",
+                "passphrase" :"nutanix/4u"
+            },
+            "endpoint": {
+                "name": "endpoint_ecn",
+                "json_file": "endpoint_ecn.json",
+                "passphrase" : "nutanix/4u"
+            }
+          }
+    ],
+    "pc_custom_role":[
+        {
+            "name": "USER",
+            "permissions":["Access_Console_Virtual_Machine","View_Virtual_Machine","View_VM_Recovery_Point"]
+        }
+    ],
     "cluster":{
-        "virtual_ip":"10.48.69.6",
+        "virtual_ip":"10.48.69.10",
         "data_service_ip":"10.48.69.11",
-        "name":"superman",
-        "dns": "10.48.104.10",
-        "ntp": "ntp.dyn.nutanix.com",
+        "name":"GSO-Juggernaut",
+        "dns": ["10.48.104.10","10.48.104.11"],
+        "ntp": ["ntp.dyn.nutanix.com"],
         "timezone": "Europe/Paris",
         "hyp_cvm_gateway":"10.48.68.1",
         "hyp_cvm_netmask":"255.255.254.0",
