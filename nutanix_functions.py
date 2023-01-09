@@ -236,6 +236,7 @@ def foundation_generate_image_payload(foundation_config:dict):
     foundation_payload = {
         'clusters': [],
         'blocks': [{'block_id': None,'nodes': [],}],
+        "current_cvm_vlan_tag":  foundation_config['hyp_cvm_vlan'],
         'ipmi_netmask': foundation_config['ipmi_netmask'], 
         'ipmi_gateway': foundation_config['ipmi_gateway'], 
         'cvm_netmask': foundation_config['hyp_cvm_netmask'],

@@ -1,7 +1,7 @@
 {
     "foundation_ip":"10.48.108.34",
-    "user": "admin",
-    "pwd": "nx2Tech086!",
+    "user": "iz@emeagso.lab",
+    "pwd": "nutanix/4u",
     "eulas":{"username":"ssg", "company": "ssg", "jobtitle": "ssg"},
     "pulse": true,
     "networks":[
@@ -34,7 +34,7 @@
     ],
     "pc":{
         "name": "pc",
-        "virtual_ip":"10.48.69.20",
+        "virtual_ip":"10.68.97.151",
         "network_name":"Primary",
         "container_name": "SelfServiceContainer",
         "network_mask": "255.255.254.0",
@@ -75,6 +75,7 @@
         "dns": ["10.48.104.10","10.48.104.11"],
         "ntp": ["ntp.dyn.nutanix.com"],
         "timezone": "Europe/Paris",
+        "cvm_vlan": "0",
         "hyp_cvm_gateway":"10.48.68.1",
         "hyp_cvm_netmask":"255.255.254.0",
         "ipmi_netmask":"255.255.254.0",
