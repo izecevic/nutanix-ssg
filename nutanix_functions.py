@@ -320,6 +320,55 @@ def foundation_image_nodes (api_server,foundation_payload,username=None,secret=N
     return resp
  # endregion
 
+ # region foundation_configure_ipmi
+def foundation_configure_ipmi (api_server,ipmi_user,ipmi_pwd,ipmi_mac,ipmi_ip,ipmi_netmask,ipmi_gateway,username=None,secret=None):
+    """
+        Configure IPMI/ILO IP address for a given nove
+
+    Args:
+        api_server: The Foundation API server
+        ipmi_user: IPMI user
+        ipmi_pwd: IPMI password
+        ipmi_mac: IPMI mac address
+        ipmi_ip: IPMI IP address
+        ipmi_netmask: IPMI netmask
+        ipmi_gateway: IPMI gateway
+        username: None (no authentication on the foundation API)
+        secret: None (no authentication on the foundation API)
+
+    Returns:
+        None
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "8000"
+    api_server_endpoint = "/foundation/ipmi_config"
+    url = "http://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST" 
+    payload = {
+        'ipmi_user': ipmi_user,
+        'ipmi_netmask': ipmi_netmask,
+        'ipmi_gateway': ipmi_gateway,
+        'ipmi_password': ipmi_pwd,
+        'blocks': [{
+            'nodes': [{
+                'ipmi_mac': ipmi_mac,
+                'ipmi_ip': ipmi_ip,
+                'ipmi_configure_now': True
+                }]
+            }
+        ]
+    }
+    # endregion
+
+    # make the api call
+    print("Configuring IPMI IP {} for IPMI mac address {}".format(ipmi_ip,ipmi_mac))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    return resp
+# endregion
+
 # region foundation_get_imaging_progress
 def foundation_get_imaging_progress (api_server,username=None,secret=None):
     """
