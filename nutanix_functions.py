@@ -2884,6 +2884,39 @@ def pc_get_runbooks(api_server,username,secret,runbook_name=None):
     return runbook_list
 # endregion
 
+# region get pc_get_runbook_uuid
+def pc_get_runbook_uuid(api_server,username,secret,runbook_name):
+    """
+        Retrieve runbooks uuid on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        runbook_name: specific runbook details to retrieve.
+        
+    Returns:
+        Runbook uuid (string).
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/runbooks/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'runbook','filter': 'name=={}'.format(runbook_name)}
+    # endregion
+
+    # Making the call
+    print("Retreiving runbook {} uuid on {}".format(runbook_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
 # region pc_get_endpoints
 def pc_get_endpoints(api_server,username,secret,endpoint_name=None):
     """
@@ -2912,7 +2945,7 @@ def pc_get_endpoints(api_server,username,secret,endpoint_name=None):
     #endregion
 
     # Making the call
-    print("Retrieving runbook details on {}".format(api_server))
+    print("Retrieving endpoint details on {}".format(api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
 
@@ -3118,8 +3151,8 @@ def pc_get_marketplace_item_details(api_server,username,secret,marketplace_item_
     return resp
 # endregion
 
-# region pc_create_marketplace_items
-def pc_create_marketplace_items(api_server,username,secret,runbook_name,runbook_uuid):
+# region pc_create_marketplace_item
+def pc_create_marketplace_item(api_server,username,secret,runbook_name,runbook_uuid):
     """
         Retrieve marketplace item details on Calm
 
@@ -3131,7 +3164,7 @@ def pc_create_marketplace_items(api_server,username,secret,runbook_name,runbook_
         runbook_uuid: Uuid of the runbook
         
     Returns:
-        Task execution (Markeptlace item details - json response).
+       Marketplace item detail (json response).
     """
 
     # region prepare the api call
@@ -3174,7 +3207,7 @@ def pc_create_marketplace_items(api_server,username,secret,runbook_name,runbook_
     return resp
 # endregion
 
-# region get pc_publish_marketplace_item
+# region pc_publish_marketplace_item
 def pc_publish_marketplace_item(api_server,username,secret,marketplace_item_uuid):
     """
         Retrieve marketplace item details on Calm

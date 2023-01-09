@@ -261,5 +261,22 @@ for project in pc_calm_projects:
 # endregion
 
 # region marketplace calm
-
+print("\n--- Marketplace Calm section ---")
+for project in pc_calm_projects:
+    runbook_name = project['runbook']['name']
+    marketplace_item_detail = pc_get_marketplace_items(pc_api,pc_user,pc_pwd,runbook_name)
+    if not marketplace_item_detail:
+        runbook_uuid = pc_get_runbook_uuid(pc_api,pc_user,pc_pwd,runbook_name)
+        if runbook_uuid:
+            print(runbook_uuid)
+            marketplace_item_creation = pc_create_marketplace_item(pc_api,pc_user,pc_pwd,runbook_name,runbook_uuid)
+            marketplace_item_uuid = pc_get_marketplace_item_uuid(pc_api,pc_user,pc_pwd,runbook_name)
+            pc_publish_marketplace_item(pc_api,pc_user,pc_pwd,marketplace_item_uuid)
+        else:
+            print("Runbook {} doesn't exist on PC {}".format(runbook_name,pc_api))
+    elif marketplace_item_detail and marketplace_item_detail[0]['status']['app_state'] != 'PUBLISHED':
+        marketplace_item_uuid = pc_get_marketplace_item_uuid(pc_api,pc_user,pc_pwd,runbook_name)
+        pc_publish_marketplace_item(pc_api,pc_user,pc_pwd,marketplace_item_uuid)
+    else:
+        print("Marketplace item {} already published on PC".format(runbook_name,pc_api))
 # endregion
