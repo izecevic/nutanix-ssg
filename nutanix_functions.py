@@ -367,6 +367,41 @@ def foundation_configure_ipmi (api_server,ipmi_user,ipmi_pwd,ipmi_mac,ipmi_ip,ip
     print("Configuring IPMI IP {} for IPMI mac address {}".format(ipmi_ip,ipmi_mac))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region foundation_ping_ipmi
+def foundation_ping_ipmi(api_server,ipmi_ip,username=None,secret=None):
+    """
+        Configure IPMI/ILO IP address for a given nove
+
+    Args:
+        api_server: The Foundation API server
+        ipmi_ip: IPMI IP address
+        username: None (no authentication on the foundation API)
+        secret: None (no authentication on the foundation API)
+
+    Returns:
+        True/False
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "8000"
+    api_server_endpoint = "/foundation/ping_multiple"
+    url = "http://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST" 
+    payload = [ipmi_ip]
+    # endregion
+
+    # make the api call
+    print("Checking IPMI IP {} ".format(ipmi_ip))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
     return resp
 # endregion
 
@@ -3294,5 +3329,6 @@ def pc_publish_marketplace_item(api_server,username,secret,marketplace_item_uuid
 
     # return
     return resp
+# endregion
 # endregion
 # endregion
