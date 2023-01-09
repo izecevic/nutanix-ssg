@@ -3016,7 +3016,7 @@ def pc_get_marketplace_items(api_server,username,secret,marketplace_item_name=No
         api_server: The IP or FQDN of Prism.
         username: The Prism user name.
         secret: The Prism user name password.
-        marketplace_item_name: specific runbook details to retrieve.
+        marketplace_item_name: specific runmarketplace_item_name details to retrieve.
         
     Returns:
         A list of marketplace_item details (entities part of the json response).
@@ -3035,6 +3035,7 @@ def pc_get_marketplace_items(api_server,username,secret,marketplace_item_name=No
     #endregion
 
     # Making the call
+    print("Retreiving marketplace item details on {}".format(api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
 
@@ -3050,5 +3051,165 @@ def pc_get_marketplace_items(api_server,username,secret,marketplace_item_name=No
 
     # return
     return marketplace_item_list
+# endregion
+
+# region get pc_get_marketplace_item_uuid
+def pc_get_marketplace_item_uuid(api_server,username,secret,marketplace_item_name):
+    """
+        Retrieve marketplace item uuid on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        marketplace_item_name: specific marketplace_item_name to retrieve.
+        
+    Returns:
+        A marketplace uuid (string).
+    """
+        
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/calm_marketplace_items/list"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {'kind':'marketplace_item','filter': 'name=={}'.format(marketplace_item_name)}
+    # endregion
+
+    # Making the call
+    print("Retrieving marketplace item {} uuid on {}".format(marketplace_item_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp['entities'][0]['metadata']['uuid']
+# endregion
+
+# region get pc_get_marketplace_item_details
+def pc_get_marketplace_item_details(api_server,username,secret,marketplace_item_uuid):
+    """
+        Retrieve marketplace item details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        marketplace_item_uuid: uuid of the martketplace_item to retrieve.
+        
+    Returns:
+        marketplace_item details (entities part of the json response).
+    """
+        
+    #region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/calm_marketplace_items/{}".format(marketplace_item_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    #endregion
+
+    # Making the call
+    print("Retreiving marketplace item details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+
+    # return
+    return resp
+# endregion
+
+# region pc_create_marketplace_items
+def pc_create_marketplace_items(api_server,username,secret,runbook_name,runbook_uuid):
+    """
+        Retrieve marketplace item details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        runbook_name: Name of the runbook
+        runbook_uuid: Uuid of the runbook
+        
+    Returns:
+        Task execution (Markeptlace item details - json response).
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/calm_marketplace_items"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'spec': {
+            'name': runbook_name,
+            'resources': {
+                'type': 'runbook',
+                'author': 'admin',
+                'runbook_template_info': {
+                    'source_runbook_reference': {
+                        'kind': 'runbook',
+                        'uuid': runbook_uuid
+                    },
+                    'is_published_with_endpoints': True,
+                    'is_published_with_secrets': True
+                },
+                'version': '1,0',
+                'app_group_uuid': str(uuid.uuid4())
+            }
+        },
+        'api_version': '3.0',
+        'metadata': {
+            'kind': 'marketplace_item'
+        },
+    }
+    # endregion
+
+    # Making the call
+    print("Creating marketplace item {} on {}".format(runbook_name,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region get pc_publish_marketplace_item
+def pc_publish_marketplace_item(api_server,username,secret,marketplace_item_uuid):
+    """
+        Retrieve marketplace item details on Calm
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        marketplace_item_uuid: Uuid of the marketplace item to publish
+        
+    Returns:
+        Task exeuction (Markeptlace item details - json response).
+    """
+        
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/calm_marketplace_items/{}".format(marketplace_item_uuid)
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "PUT"
+
+    # get marketplace_item details first and update the payload
+    marketplace_item_payload = pc_get_marketplace_item_details(api_server,username,secret,marketplace_item_uuid)
+    marketplace_item_payload.pop("status",None)
+    marketplace_item_payload['spec']['resources']['app_state'] = 'PUBLISHED'
+    payload = marketplace_item_payload
+    #endregion
+
+    # Making the call
+    print("Publishing marketplace item uuid {} on {}".format(marketplace_item_uuid,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
 # endregion
 # endregion
