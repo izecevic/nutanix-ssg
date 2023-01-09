@@ -320,7 +320,7 @@ def foundation_image_nodes (api_server,foundation_payload,username=None,secret=N
     return resp
  # endregion
 
- # region foundation_configure_ipmi
+# region foundation_configure_ipmi
 def foundation_configure_ipmi (api_server,ipmi_user,ipmi_pwd,ipmi_mac,ipmi_ip,ipmi_netmask,ipmi_gateway,username=None,secret=None):
     """
         Configure IPMI/ILO IP address for a given nove
