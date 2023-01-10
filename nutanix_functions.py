@@ -1316,7 +1316,7 @@ def prism_add_ntp(api_server,username,secret,ntp_server):
     api_server_endpoint = "/api/nutanix/v1/cluster/ntp_servers/add_list"
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    payload = [{'hostname': ntp_server}]
+    payload = [{'ipv4': ntp_server}]
     #endregion
 
     # make the call
