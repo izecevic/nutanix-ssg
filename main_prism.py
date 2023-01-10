@@ -72,7 +72,7 @@ else:
 print("\n--- Network section ---")
 for network in cluster_networks:
     prism_network_details = prism_get_networks(prism_api,prism_user,prism_pwd,network_name=network['name'])
-    if prism_network_details == None:
+    if not prism_network_details:
         if 'ipam' in network:
             prism_create_network(prism_api,prism_user,prism_pwd,network['name'],network['vlan'],network['ipam']['address'],network['ipam']['gateway'],network['ipam']['prefix'],network['ipam']['pool'])
         else:
@@ -89,7 +89,7 @@ for image in cluster_images:
         prism_container_uuid = prism_get_container_uuid(prism_api,prism_user,prism_pwd,image['container'])
         prism_image_task = prism_upload_image_url(prism_api,prism_user,prism_pwd,image['name'],image['description'],image['url'],prism_container_uuid)
         prism_image_task_uuid = prism_image_task['taskUuid']
-        prism_monitor_task_v2(prism_api,prism_user,prism_pwd,prism_image_task_uuid,retry_delay_secs=10,max_attemps=30)
+        prism_monitor_task_v2(prism_api,prism_user,prism_pwd,prism_image_task_uuid,retry_delay_secs=30,max_attemps=100)
     else:
         print("Image {} already uploaded on Nutanix cluster {}".format(image['name'],prism_api))
 # endregion
@@ -133,7 +133,7 @@ for ntp_server in cluster_ntp:
 print("\n--- Active Directory section ---")
 for directory in cluster_directories:
     prism_directory_details = prism_get_directory(prism_api,prism_user,prism_pwd,directory['domain'])
-    if prism_directory_details == None:
+    if not prism_directory_details:
         prism_set_directory(prism_api,prism_user,prism_pwd,directory['name'],directory['domain'],directory['url'],directory['svc_user'],directory['svc_pwd'])
     else:
         print("Directory {} already configured on Nutanix cluster {}".format(directory['domain'],prism_api))
