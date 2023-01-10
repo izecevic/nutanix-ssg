@@ -53,13 +53,3 @@ print("\n--- Trigger foundation process ---")
 foundation_image_nodes(foundation_api,foundation_payload)
 foundation_monitor_progress(foundation_api)
 # endregion
-
-# region update prism admin default password
-print("\n--- Update prism default password section ---")
-prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
-print(prism_cluster_details)
-if prism_cluster_details == 401: # (UNAUTHORIZED)
-    prism_update_default_pwd(prism_api,prism_pwd,usernane="admin",default_secret="nutanix/4u")
-else:
-    print("Default password already updated on Nutanix cluster {}".format(prism_api))
-# endregion
