@@ -218,13 +218,14 @@ elif prism_pc_vm_details and prism_pc_vm_details[0]['vmType'] == 'kPCVM':
         print("PC VM {} already deployed on Nutanix cluster {}".format(pc_name,prism_api))
 # endregion
 
+
 # region PC registration
 print("\n--- PC registration section ---")
 prism_pc_vm_details = prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=pc_name)
 prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
 print(prism_cluster_details['isRegisteredToPC'])
 if prism_cluster_details['isRegisteredToPC'] == None and not prism_pc_vm_details: 
-   print("Prism Central {} not deployed on Nutanix cluster {}".format(cluster_pc_ip,prism_api))
+    print("Prism Central {} not deployed on Nutanix cluster {}".format(cluster_pc_ip,prism_api))
 elif prism_cluster_details['isRegisteredToPC'] == None and prism_pc_vm_details: # if PE not registered and PC vm exist
     prism_register_pc(prism_api,prism_user,prism_pwd,cluster_pc_ip,pc_username="admin",pc_secret="nutanix/4u")
 else:
