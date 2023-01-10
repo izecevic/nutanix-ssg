@@ -25,7 +25,7 @@ pc_roles = json_config['pc_custom_role']
 pc_calm_projects = json_config['calm']
 pc_directory = json_config['directory'][0]['name']
 
-# main
+#main
 
 # region update prism admin default password
 print("--- Update prism default password section ---")
@@ -227,16 +227,17 @@ for project in pc_calm_projects:
 print("\n--- Endpoint Calm section ---")
 for project in pc_calm_projects:
     endpoint_name = project['endpoint']['name']
-    endpoint_json_file = project['endpoint']['json_file']
+    endpoint_json = project['endpoint']['json_file']
+    endpoint_file = (requests.get(endpoint_json)).content
     pc_endpoint_details = pc_get_endpoints(pc_api,pc_user,pc_pwd,endpoint_name)
     if not pc_endpoint_details:
         project_name = project['project_name']
         project_uuid = pc_get_project_uuid(pc_api,pc_user,pc_pwd,project_name)
         if project['endpoint']['passphrase']:
             endpoint_passphrase = project['endpoint']['passphrase']
-            pc_upload_endpoint(pc_api,pc_user,pc_pwd,project_uuid,endpoint_name,endpoint_json_file,endpoint_passphrase)
+            pc_upload_endpoint(pc_api,pc_user,pc_pwd,project_uuid,endpoint_name,endpoint_file,endpoint_passphrase)
         else:
-            pc_upload_endpoint(pc_api,pc_user,pc_pwd,project_uuid,endpoint_name,endpoint_json_file,passphrase=None)
+            pc_upload_endpoint(pc_api,pc_user,pc_pwd,project_uuid,endpoint_name,endpoint_file,passphrase=None)
     else:
         print("Endpoint {} already imported on Caln {}".format(endpoint_name,pc_api))
 # endregion
@@ -245,16 +246,17 @@ for project in pc_calm_projects:
 print("\n--- Runbook Calm section ---")
 for project in pc_calm_projects:
     runbook_name = project['runbook']['name']
-    runbook_json_file = project['runbook']['json_file']
+    runbook_json = project['runbook']['json_file']
+    runbook_file = (requests.get(runbook_json)).content
     pc_runbook_details = pc_get_runbooks(pc_api,pc_user,pc_pwd,runbook_name)
     if not pc_runbook_details:
         project_name = project['project_name']
         project_uuid = pc_get_project_uuid(pc_api,pc_user,pc_pwd,project_name)
         if project['runbook']['passphrase']:
             runbook_passphrase = project['runbook']['passphrase']
-            pc_upload_runbook(pc_api,pc_user,pc_pwd,project_uuid,runbook_name,runbook_json_file,runbook_passphrase)
+            pc_upload_runbook(pc_api,pc_user,pc_pwd,project_uuid,runbook_name,runbook_file,runbook_passphrase)
         else:
-            pc_upload_runbook(pc_api,pc_user,pc_pwd,project_uuid,runbook_name,runbook_json_file,passphrase=None)
+            pc_upload_runbook(pc_api,pc_user,pc_pwd,project_uuid,runbook_name,runbook_file,passphrase=None)
     else:
         print("Runbook {} already imported on Caln {}".format(runbook_name,pc_api))
 

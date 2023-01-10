@@ -1548,7 +1548,8 @@ def prism_software_metadata_validate(api_server,username,secret,metadata_type,me
     api_server_endpoint = "/api/nutanix/v1/upgrade/{}/softwares/validate_upload".format(metadata_type)
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    payload = open(metadata_file, 'rb').read() # open as binary file
+    #payload = open(metadata_file, 'rb').read() # open as binary file
+    payload = metadata_file
     # endregion
 
     # Making the call
@@ -1578,14 +1579,15 @@ def prism_software_upload(api_server,username,secret,metadata_file,binary_file):
     """
 
     # validate metadata first
-    metadata_json = json.load(open(metadata_file))
+    #metadata_json = json.load(open(metadata_file))
+    metadata_json = json.loads(metadata_file)
     metadata_type = metadata_json['type']
     metadata_version = metadata_json['version_id']
     metadata_size = metadata_json['size']
     metadata_md5 = metadata_json['hex_md5']
     metadata_validate = prism_software_metadata_validate(api_server,username,secret,metadata_type,metadata_file)
     metadata_cookies = metadata_validate.get_dict()['NTNX_SOFTWARE_UPLOAD']
-    
+
 
     # region prepare the api call
     headers = {'Content-Type': 'application/octet-stream;charset=UTF-8','Cookie':'NTNX_SOFTWARE_UPLOAD={}'.format(metadata_cookies)}
@@ -1593,7 +1595,8 @@ def prism_software_upload(api_server,username,secret,metadata_file,binary_file):
     api_server_endpoint = "/api/nutanix/v1/upgrade/{}/softwares/{}/upload?fileSize={}&md5Sum={}&fileName={}&version={}".format(metadata_type,metadata_version,metadata_size,metadata_md5,metadata_version,metadata_version)
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    payload = open(binary_file, 'rb').read() # open as binary file
+    #payload = open(binary_file, 'rb').read() # open as binary file
+    payload = binary_file
     # endregion
 
     # Making the call
@@ -3084,7 +3087,7 @@ def pc_get_endpoints(api_server,username,secret,endpoint_name=None):
 # endregion
 
 # region pc_upload_runbook
-def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbook_json_file,passphrase=None):
+def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbook_file,passphrase=None):
     """
         Upload a runbook on Calm (json file)
 
@@ -3109,7 +3112,8 @@ def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbo
     # endregion
 
     # open the runbook as binary_file
-    files = [('file',(runbook_json_file, open(runbook_json_file, 'rb'),'application/json'))]
+    #files = [('file',(runbook_json_file, open(runbook_json_file, 'rb'),'application/json'))]
+    files = [('file',(runbook_file, runbook_file,'application/json'))]
     payload = {'name': runbook_name, 'project_uuid': project_uuid,'passphrase': passphrase}
 
     # Making the call
@@ -3122,7 +3126,7 @@ def pc_upload_runbook(api_server,username,secret,project_uuid,runbook_name,runbo
 # endregion
 
 # region upload endpoint
-def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,endpoint_json_file,passphrase=None):
+def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,endpoint_file,passphrase=None):
     """
         Upload a runbook on Calm (json file)
 
@@ -3146,7 +3150,8 @@ def pc_upload_endpoint(api_server,username,secret,project_uuid,endpoint_name,end
     #endregion
 
     # open the endpoint as binary_file
-    files = [('file',(endpoint_json_file, open(endpoint_json_file, 'rb'),'application/json'))]
+    #files = [('file',(endpoint_json_file, open(endpoint_json_file, 'rb'),'application/json'))]
+    files = [('file',(endpoint_file, endpoint_file,'application/json'))]
     payload = {'name': endpoint_name, 'project_uuid': project_uuid,'passphrase': passphrase}
 
     # Making the call
