@@ -1548,8 +1548,8 @@ def prism_software_metadata_validate(api_server,username,secret,metadata_type,me
     api_server_endpoint = "/api/nutanix/v1/upgrade/{}/softwares/validate_upload".format(metadata_type)
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    #payload = open(metadata_file, 'rb').read() # open as binary file
-    payload = metadata_file
+    payload = open(metadata_file, 'rb').read() # open as binary file
+    #payload = metadata_file
     # endregion
 
     # Making the call
@@ -1579,8 +1579,8 @@ def prism_software_upload(api_server,username,secret,metadata_file,binary_file):
     """
 
     # validate metadata first
-    #metadata_json = json.load(open(metadata_file))
-    metadata_json = json.loads(metadata_file)
+    metadata_json = json.load(open(metadata_file))
+    #metadata_json = json.loads(metadata_file)
     metadata_type = metadata_json['type']
     metadata_version = metadata_json['version_id']
     metadata_size = metadata_json['size']
@@ -1588,15 +1588,14 @@ def prism_software_upload(api_server,username,secret,metadata_file,binary_file):
     metadata_validate = prism_software_metadata_validate(api_server,username,secret,metadata_type,metadata_file)
     metadata_cookies = metadata_validate.get_dict()['NTNX_SOFTWARE_UPLOAD']
 
-
     # region prepare the api call
     headers = {'Content-Type': 'application/octet-stream;charset=UTF-8','Cookie':'NTNX_SOFTWARE_UPLOAD={}'.format(metadata_cookies)}
     api_server_port = "9440"
     api_server_endpoint = "/api/nutanix/v1/upgrade/{}/softwares/{}/upload?fileSize={}&md5Sum={}&fileName={}&version={}".format(metadata_type,metadata_version,metadata_size,metadata_md5,metadata_version,metadata_version)
     url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
     method = "POST"
-    #payload = open(binary_file, 'rb').read() # open as binary file
-    payload = binary_file
+    payload = open(binary_file, 'rb').read() # open as binary file
+    #payload = binary_file
     # endregion
 
     # Making the call

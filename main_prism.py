@@ -175,9 +175,7 @@ print("\n--- PC softwares upload section ---")
 prism_pc_softwares_details = prism_get_pc_software(prism_api,prism_user,prism_pwd)
 if not prism_pc_softwares_details: # if empty, we upload provided PC binary
     print("PC softwares not available on Nutanix Cluster {}".format(prism_api))
-    metadata_file = (requests.get(cluster_pc_metadata_file)).content
-    binary_file = (requests.get(cluster_pc_binary_file)).content
-    task = prism_software_upload(prism_api,prism_user,prism_pwd,metadata_file,binary_file)
+    prism_software_upload(prism_api,prism_user,prism_pwd,cluster_pc_metadata_file,cluster_pc_binary_file)
 else:
     print("PC software already available on Nutanix cluster {}".format(prism_api))
 # endregion
