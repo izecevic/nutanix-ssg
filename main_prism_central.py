@@ -78,7 +78,7 @@ for ntp_server in cluster_ntp:
 print("\n--- AD section ---")
 for directory in cluster_directories:
     pc_directory_details = prism_get_directory(pc_api,pc_user,pc_pwd,directory['domain'])
-    if pc_directory_details == None:
+    if not pc_directory_details:
         prism_set_directory(pc_api,pc_user,pc_pwd,directory['name'],directory['domain'],directory['url'],directory['svc_user'],directory['svc_pwd'])
     else:
         print("Directory {} already configured on PC {}".format(directory['domain'],pc_api))
