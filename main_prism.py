@@ -34,7 +34,6 @@ pc_network_gateway = pc_details['network_gateway']
 # region update prism admin default password
 print("\n--- Update prism default password section ---")
 prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
-print(prism_cluster_details)
 if prism_cluster_details == 401: # (UNAUTHORIZED)
     prism_update_default_pwd(prism_api,prism_pwd,username="admin",default_secret="nutanix/4u")
 else:
