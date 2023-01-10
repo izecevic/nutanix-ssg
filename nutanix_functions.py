@@ -1201,6 +1201,39 @@ def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=
     return
 # endregion
 
+# region prism_set_timezone
+def prism_set_timezone(api_server,username,secret,timezone):
+    """
+        Add DNS on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        timezone: Timezone to set
+        
+    Returns:
+         True/False
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "PATCH"
+    payload = {'timezone': timezone}
+    # endregion
+
+    # make the call
+    print("Configuring Timezone {} on {}".format(timezone,api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
 # region prism_get_dns
 def prism_get_dns(api_server,username,secret):
     """

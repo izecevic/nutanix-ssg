@@ -14,6 +14,7 @@ prism_user = json_config['user']
 prism_pwd = json_config['pwd']
 cluster_eula = json_config['eulas']
 cluster_pulse = json_config['pulse']
+cluster_timezone = json_config['timezone']
 cluster_dsip = json_config['cluster']['data_service_ip']
 cluster_networks = json_config['networks']
 cluster_images = json_config['images']
@@ -66,6 +67,15 @@ if prism_cluster_details['clusterExternalDataServicesIPAddress'] != cluster_dsip
 else:
     print("Cluster Data Service IP {} already configured on Nutanix cluster".format(cluster_dsip,prism_api))
 # # endregion
+
+# region timezone
+print("\n--- Timezone section ---")
+prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
+if prism_cluster_details['timezone'] != cluster_timezone:
+    prism_set_timezone(prism_api,prism_user,prism_pwd,cluster_timezone)
+else:
+    print("Timezone already configured on Nutanix cluster {}".format(prism_api))
+# endregion
 
 # region networks
 print("\n--- Network section ---")
