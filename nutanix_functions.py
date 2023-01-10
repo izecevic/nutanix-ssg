@@ -762,7 +762,6 @@ def prism_get_networks(api_server,username,secret,network_name=None):
         net_list.extend(resp['entities'])
     else: 
         for network in resp['entities']:
-            print("test1")
             if network['name'] == network_name:
                 print("Returning network {} on {}".format(network_name,api_server))
                 net_list.append(network)
@@ -1180,7 +1179,8 @@ def prism_monitor_task_v2(api_server,username,secret,task_uuid,retry_delay_secs=
         # make the api call
         print("Making a {} API call to {}".format(method, url))
         task_progress = process_request(url,method,username,secret,headers)
-        print(json.dumps(task_progress, indent=4))
+        print("Percentage_complete: {}".format(task_progress['percentage_complete']))
+        print("Progress_status: {}".format(task_progress['progress_status']))
         print("Attempt number: {}".format(attempt))
         if task_progress['percentage_complete'] == 100 and task_progress['progress_status'] == "Succeeded":
             print("Task succeeded")
