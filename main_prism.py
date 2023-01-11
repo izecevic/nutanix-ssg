@@ -175,7 +175,6 @@ for directory in cluster_directories:
 
 #region PC software upload (works only on a dark site environment - upload binary method instead of downloading)
 print("\n--- PC softwares upload section ---")
-prism_software_upload(prism_api,prism_user,prism_pwd,cluster_pc_metadata_file,cluster_pc_binary_file)
 prism_pc_softwares_details = prism_get_pc_software(prism_api,prism_user,prism_pwd)
 if not prism_pc_softwares_details: # if empty, we upload provided PC binary
     print("PC softwares not available on Nutanix Cluster {}".format(prism_api))
