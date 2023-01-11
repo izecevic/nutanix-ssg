@@ -24,6 +24,7 @@ cluster_directories = json_config['directory']
 cluster_pc_metadata_file = json_config['pc']['metadata_file']
 cluster_pc_binary_file = json_config['pc']['binary_file']
 cluster_pc_ip = json_config['pc']['virtual_ip']
+cluster_vms = json_config['vms']
 pc_details = json_config['pc']
 pc_name = pc_details['name']
 pc_ip = pc_details['virtual_ip']
@@ -123,19 +124,21 @@ for ntp_server in cluster_ntp:
         print("NTP {} already configured on Nutanix cluster {}".format(ntp_server,prism_api))
 # endregion
 
-### WORK IN PROGRESS
-# # region create VM 
-# print("\n--- Create VM ECN section ---")
-# prism_image_uuid = prism_get_image_uuid(prism_api,prism_user,prism_pwd,image_name="iz-test-centos")
-# prism_network_uuid = prism_get_network_uuid(prism_api,prism_user,prism_pwd,network_name="INFRA")
-# prism_create_vm_task = prism_create_vm_from_image(prism_api,prism_user,prism_pwd,vm_name="IGOR4",vm_cpu="2",vm_mem="1",image_uuid=prism_image_uuid,network_uuid=prism_network_uuid,vm_ip="10.227.3.22")
-# prism_create_vm_task_uuid = prism_create_vm_task['status']['execution_context']['task_uuid']
-# prism_monitor_task_v2(prism_api,prism_user,prism_pwd,prism_create_vm_task_uuid,retry_delay_secs=10,max_attemps=6)
-
-# vm_uuid=prism_get_vms(prism_api,prism_user,prism_pwd,vm_name="IGOR4")[0]['uuid']
-# print(vm_uuid)
-# print(prism_set_vm_powerstate(prism_api,prism_user,prism_pwd,vm_uuid,vm_powerstate='off'))
-# # endregion
+# region create VM 
+print("\n--- Create VM section ---")
+for vm in cluster_vms:
+    prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])
+    if not prism_get_vms:
+        vm_image_uuid = prism_get_image_uuid(prism_api,prism_user,prism_pwd,image_name=vm['image'])
+        vm_network_uuid = prism_get_network_uuid(prism_api,prism_user,prism_pwd,network_name=vm['network'])
+        vm_create_vm_task = prism_create_vm_from_image(prism_api,prism_user,prism_pwd,vm_name=vm['image'],vm_cpu=vm['cpu'],vm_mem=vm['memory'],image_uuid=vm_image_uuid,network_uuid=vm_network_uuid,vm_ip=vm['ip'])
+        vm_create_vm_task_uuid = vm_create_vm_task['status']['execution_context']['task_uuid']
+        prism_monitor_task_v2(prism_api,prism_user,prism_pwd,vm_create_vm_task_uuid,retry_delay_secs=10,max_attemps=10)
+        vm_uuid = prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])[0]['uuid']
+        prism_set_vm_powerstate(prism_api,prism_user,prism_pwd,vm_uuid,vm_powerstate='on') # power on the VM
+    else:
+        print("VM {} already deployed on Nutanix Cluster {}".format(vm['name'],prism_api))
+# endregion
 
 # region AD
 print("\n--- Active Directory section ---")
@@ -172,6 +175,7 @@ for directory in cluster_directories:
 
 #region PC software upload (works only on a dark site environment - upload binary method instead of downloading)
 print("\n--- PC softwares upload section ---")
+prism_software_upload(prism_api,prism_user,prism_pwd,cluster_pc_metadata_file,cluster_pc_binary_file)
 prism_pc_softwares_details = prism_get_pc_software(prism_api,prism_user,prism_pwd)
 if not prism_pc_softwares_details: # if empty, we upload provided PC binary
     print("PC softwares not available on Nutanix Cluster {}".format(prism_api))

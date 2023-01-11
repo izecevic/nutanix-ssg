@@ -1739,7 +1739,7 @@ def prism_create_vm_from_image(api_server,username,secret,vm_name,vm_cpu,vm_mem,
             'resources': {
                 'num_sockets': int(vm_cpu),
                 'num_vcpus_per_socket': 1,
-                'memory_size_mib': (int(vm_mem)*1024),
+                'memory_size_mib': int((vm_mem)*1024),
                 'power_state': 'OFF',
                 'disk_list': [
                     {
@@ -1785,7 +1785,7 @@ def prism_create_vm_from_image(api_server,username,secret,vm_name,vm_cpu,vm_mem,
         payload['spec']['resources']['nic_list'][0]['ip_endpoint_list'].append(payload_vm_ip)
 
     # Making the call
-    print("Creating VM VM named {} on {}".format(vm_name,api_server))
+    print("Creating VM named {} on {}".format(vm_name,api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
     
