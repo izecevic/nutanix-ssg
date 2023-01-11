@@ -9,6 +9,16 @@
         {"name": "SUP", "vlan": 70},
         {"name": "PROD", "vlan": 80}
     ],
+    "vms": [
+        {
+          "name": "ecn",
+          "cpu": "1",
+          "memory": "4",
+          "image": "iz-test-centos",
+          "network": "Primary",
+          "ip": "10.10.10.1"
+        }
+    ],
     "images":[
         {
           "name": "iz-test-centos",
@@ -52,12 +62,12 @@
             ],
             "runbook": {
                 "name": "runbook_ecn",
-                "json_file": "runbook_ecn.json",
+                "json_file": "https://raw.githubusercontent.com/izecevic/nutanix/master/python/runbook_ecn.json",
                 "passphrase" :"nutanix/4u"
             },
             "endpoint": {
                 "name": "endpoint_ecn",
-                "json_file": "endpoint_ecn.json",
+                "json_file": "https://raw.githubusercontent.com/izecevic/nutanix/master/python/endpoint_ecn.json",
                 "passphrase" : "nutanix/4u"
             }
           }
@@ -69,7 +79,7 @@
         }
     ],
     "cluster":{
-        "virtual_ip":"10.48.69.10",
+        "virtual_ip":"10.68.97.101",
         "data_service_ip":"10.48.69.11",
         "name":"GSO-Juggernaut",
         "dns": ["10.48.104.10","10.48.104.11"],
