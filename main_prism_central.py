@@ -141,11 +141,21 @@ for image in pc_prism_get_images:
     elif pc_image_details and pc_image_details != 404:
         print("Image {} already imported on PC {}".format(image_name,pc_api))
 # endregion
- 
+
+# region enable flow
+print("\n--- Enable Flow section ---")
+pc_flow_status = pc_check_flow(pc_api,pc_user,pc_pwd)
+if pc_flow_status['service_enablement_status'] != "ENABLE":
+    pc_enable_flow_task = pc_enable_flow(pc_api,pc_user ,pc_pwd)
+    pc_enable_flow_task_uuid = pc_enable_flow_task['task_uuid']
+    prism_monitor_task_v2(pc_api,pc_user,pc_pwd,pc_enable_flow_task_uuid,retry_delay_secs=30,max_attemps=10)
+else:
+    print("Flow already enabled on PC {}".format(pc_api))
+# endregion
+
 # region enable calm
 print("\n--- Enable Calm section ---")
 pc_calm_status = pc_check_calm(pc_api,pc_user,pc_pwd)
-print(json.dumps(pc_calm_status,indent=4))
 if pc_calm_status['service_enablement_status'] != "ENABLED":
     pc_enable_calm_task = pc_enable_calm(pc_api,pc_user ,pc_pwd)
     pc_enable_calm_task_uuid = pc_enable_calm_task['task_uuid']

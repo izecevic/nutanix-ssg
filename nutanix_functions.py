@@ -1899,6 +1899,71 @@ def pc_enable_calm(api_server,username,secret):
     return resp
 # endregion
 
+# region pc_check_flow
+def pc_check_flow(api_server,username,secret):
+    """
+        Retrieve Flow details on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+        Flow service details (part of the json response)
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/services/microseg/status"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # Making the call
+    print("Checking Flow status on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    
+    # return
+    return resp
+# endregion
+
+# region pc_enable_flow
+def pc_enable_flow(api_server,username,secret):
+    """
+        Enabling Flow on Prism Central
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+        Task operation (part of the json response)
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/services/microseg"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "POST"
+    payload = {
+        'state': 'ENABLE'
+    }
+    # endregion
+
+    # Making the call
+    print("Enabling Flow status on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+    
+    # return
+    return resp
+# endregion
+
 # region pc_get_permissions
 def pc_get_permissions(api_server,username,secret):
     """
