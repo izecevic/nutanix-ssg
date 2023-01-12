@@ -124,21 +124,21 @@ for ntp_server in cluster_ntp:
         print("NTP {} already configured on Nutanix cluster {}".format(ntp_server,prism_api))
 # endregion
 
-# region create VM 
-print("\n--- Create VM section ---")
-for vm in cluster_vms:
-    prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])
-    if not prism_get_vms:
-        vm_image_uuid = prism_get_image_uuid(prism_api,prism_user,prism_pwd,image_name=vm['image'])
-        vm_network_uuid = prism_get_network_uuid(prism_api,prism_user,prism_pwd,network_name=vm['network'])
-        vm_create_vm_task = prism_create_vm_from_image(prism_api,prism_user,prism_pwd,vm_name=vm['image'],vm_cpu=vm['cpu'],vm_mem=vm['memory'],image_uuid=vm_image_uuid,network_uuid=vm_network_uuid,vm_ip=vm['ip'])
-        vm_create_vm_task_uuid = vm_create_vm_task['status']['execution_context']['task_uuid']
-        prism_monitor_task_v2(prism_api,prism_user,prism_pwd,vm_create_vm_task_uuid,retry_delay_secs=10,max_attemps=10)
-        vm_uuid = prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])[0]['uuid']
-        prism_set_vm_powerstate(prism_api,prism_user,prism_pwd,vm_uuid,vm_powerstate='on') # power on the VM
-    else:
-        print("VM {} already deployed on Nutanix Cluster {}".format(vm['name'],prism_api))
-# endregion
+# # region create VM 
+# print("\n--- Create VM section ---")
+# for vm in cluster_vms:
+#     prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])
+#     if not prism_get_vms:
+#         vm_image_uuid = prism_get_image_uuid(prism_api,prism_user,prism_pwd,image_name=vm['image']) # retrieve image_uuids
+#         vm_network_uuid = prism_get_network_uuid(prism_api,prism_user,prism_pwd,network_name=vm['network'])
+#         vm_create_vm_task = prism_create_vm_from_image(prism_api,prism_user,prism_pwd,vm_name=vm['image'],vm_cpu=vm['cpu'],vm_mem=vm['memory'],image_uuid=vm_image_uuid,network_uuid=vm_network_uuid,vm_ip=vm['ip'])
+#         vm_create_vm_task_uuid = vm_create_vm_task['status']['execution_context']['task_uuid']
+#         prism_monitor_task_v2(prism_api,prism_user,prism_pwd,vm_create_vm_task_uuid,retry_delay_secs=10,max_attemps=10)
+#         vm_uuid = prism_get_vms(prism_api,prism_user,prism_pwd,vm_name=vm['name'])[0]['uuid']
+#         prism_set_vm_powerstate(prism_api,prism_user,prism_pwd,vm_uuid,vm_powerstate='on') # power on the VM
+#     else:
+#         print("VM {} already deployed on Nutanix Cluster {}".format(vm['name'],prism_api))
+# # endregion
 
 # region AD
 print("\n--- Active Directory section ---")
