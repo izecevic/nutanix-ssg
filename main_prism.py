@@ -25,6 +25,7 @@ cluster_pc_metadata_file = json_config['pc']['metadata_file']
 cluster_pc_binary_file = json_config['pc']['binary_file']
 cluster_pc_ip = json_config['pc']['virtual_ip']
 cluster_vms = json_config['vms']
+cluster_stig = json_config ['stig']
 pc_details = json_config['pc']
 pc_name = pc_details['name']
 pc_ip = pc_details['virtual_ip']
@@ -124,6 +125,16 @@ for ntp_server in cluster_ntp:
         print("NTP {} already configured on Nutanix cluster {}".format(ntp_server,prism_api))
 # endregion
 
+# region configure stig
+print("\n--- Configure stig section ---")
+prism_cluster_details = prism_get_cluster_v2(prism_api,prism_user,prism_pwd)
+for stig_key, stig_value in cluster_stig.items():
+    if prism_cluster_details['security_compliance_config'][stig_key] != stig_value:
+        prism_set_stig(prism_api,prism_user,prism_pwd,stig_key,stig_value)
+    else:
+        print("Stig key {} already configured to value {} on Nutanix cluster {}".format(stig_key,stig_value,prism_api))
+# endregion
+
 # # region create VM 
 # print("\n--- Create VM section ---")
 # for vm in cluster_vms:
@@ -218,7 +229,6 @@ if not prism_pc_vm_details:
 elif prism_pc_vm_details and prism_pc_vm_details[0]['vmType'] == 'kPCVM':
         print("PC VM {} already deployed on Nutanix cluster {}".format(pc_name,prism_api))
 # endregion
-
 
 # region PC registration
 print("\n--- PC registration section ---")

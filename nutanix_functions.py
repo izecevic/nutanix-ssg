@@ -691,6 +691,37 @@ def prism_get_cluster(api_server,username,secret):
     return resp
 # endregion
 
+# region prism_get_cluster
+def prism_get_cluster_v2(api_server,username,secret):
+    """
+        Retrieve Cluster details on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        
+    Returns:
+         Cluster details (part of the json response)
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v2.0/cluster/"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # make the call
+    print("Retrieve cluster details on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers)
+    
+    # return
+    return resp
+# endregion
+
 # region configure data service ip
 def prism_set_dsip(api_server,username,secret,cluster_dsip):
     """
@@ -717,6 +748,44 @@ def prism_set_dsip(api_server,username,secret,cluster_dsip):
 
     # make the call
     print("Configuring a Data Service IP on {}".format(api_server))
+    print("Making a {} API call to {}".format(method, url))
+    resp = process_request(url,method,username,secret,headers,payload)
+
+    # return
+    return resp
+# endregion
+
+# region configure stig
+def prism_set_stig(api_server,username,secret,stig_key,stig_value):
+    """
+        Configure asecurity_compliance_config on Prism Element
+
+    Args:
+        api_server: The IP or FQDN of Prism.
+        username: The Prism user name.
+        secret: The Prism user name password.
+        stig_key: stig_key to configure
+        stig_value: stig_value to configure
+        
+    Returns:
+         None
+    """
+
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v1/cluster/"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "PATCH"
+    payload = {
+        'security_compliance_config': {
+            stig_key: stig_value
+        }
+    }
+    # endregion
+
+    # make the call
+    print("Configuring STIG setting {} to {} on {}".format(stig_key,stig_value,api_server))
     print("Making a {} API call to {}".format(method, url))
     resp = process_request(url,method,username,secret,headers,payload)
 
@@ -2569,7 +2638,7 @@ def pc_create_project(api_server,username,secret,project_name):
     return resp
 # endregion
 
-#region get pc_get_directory_service_uuid
+# region get pc_get_directory_service_uuid
 def pc_get_directory_service_uuid(api_server,username,secret,directory_service_name):
     """
         Retrieves directory service uuid on Prism Central
