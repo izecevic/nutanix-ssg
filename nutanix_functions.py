@@ -1968,6 +1968,59 @@ def pc_enable_calm(api_server,username,secret):
     return resp
 # endregion
 
+# region pc_monitor_calm_health
+def pc_monitor_calm_health(api_server,username,secret,retry_delay_secs=30,max_attemps=30):
+    """
+        Monitor a Calm service status on PC. Upon Enablement, PC spin up Calm containers
+        Calm containers takes a few minutes to start.
+
+    Args:
+        api_server: The Foundation API server
+        username: None (no authentication on the foundation API)
+        secret: None (no authentication on the foundation API)
+        max_attemps: 30 (default)
+        retry_delay_secs: 30 seconds (default)
+        
+    Returns:
+        None
+    """
+    
+    # variables
+    attempt = 1
+    max_attempts = max_attemps # default is 30
+    retry_delay_secs = retry_delay_secs # default is 30 seconds
+    
+    # region prepare the api call
+    headers = {'Content-Type': 'application/json','Accept': 'application/json'}
+    api_server_port = "9440"
+    api_server_endpoint = "/api/nutanix/v3/services/nucalm/status"
+    url = "https://{}:{}{}".format(api_server,api_server_port,api_server_endpoint)
+    method = "GET"
+    # endregion
+
+    # track task process
+    print("Monitoring Calm service health status on {}".format(api_server))
+    while attempt <= max_attempts:
+        # make the api call
+        print("Making a {} API call to {}".format(method, url))
+        calm_service_status = process_request(url,method,username,secret,headers)
+        print("Attempt number: {}".format(attempt))
+        if calm_service_status['service_running_status'] == "HEALTHY":
+            print("Calm service health is now HEALTHY")
+            return
+        elif calm_service_status['service_running_status'] == "UNHEALTHY":
+            print("Calm service health is still not HEALTHY")
+            print("WARNING: remaining attemps before failure: {0}".format(max_attempts-attempt))
+            print("Let's wait for {} seconds..".format(retry_delay_secs))
+            attempt +=1
+            sleep(retry_delay_secs)
+
+    print ("Error: Exceeded max attempts {}".format(max_attempts))
+
+    # return
+    return
+# endregion
+
 # region pc_check_flow
 def pc_check_flow(api_server,username,secret):
     """

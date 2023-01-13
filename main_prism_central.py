@@ -175,6 +175,7 @@ if pc_calm_status['service_enablement_status'] != "ENABLED":
     pc_enable_calm_task = pc_enable_calm(pc_api,pc_user ,pc_pwd)
     pc_enable_calm_task_uuid = pc_enable_calm_task['task_uuid']
     prism_monitor_task_v2(pc_api,pc_user,pc_pwd,pc_enable_calm_task_uuid,retry_delay_secs=30,max_attemps=10)
+    pc_monitor_calm_health(pc_api,pc_user,pc_pwd,retry_delay_secs=30,max_attemps=30)
 else:
     print("Calm already enabled on PC {}".format(pc_api))
 # endregion
