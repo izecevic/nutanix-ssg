@@ -12,6 +12,8 @@ json_config = json.load(open(file_config))
 pc_api = json_config['pc']['virtual_ip']
 pc_user = json_config['user']
 pc_pwd = json_config['pwd']
+pc_details = json_config['pc']
+pc_name = pc_details['name']
 prism_api = json_config['cluster']['virtual_ip']
 prism_user = json_config['user']
 prism_pwd = json_config['pwd']
@@ -34,6 +36,19 @@ if pc_cluster_details == 401: # (UNAUTHORIZED)
     prism_update_default_pwd(pc_api,new_secret=pc_pwd,username="admin",default_secret="Nutanix/4u")
 else:
     print("Default password already updated on PC {}".format(pc_api))
+# endregion
+
+# region PC registration
+print("\n--- PC registration section ---")
+prism_pc_vm_details = prism_get_vms(prism_api,prism_user,prism_pwd,pc_name)
+prism_cluster_details = prism_get_cluster(prism_api,prism_user,prism_pwd)
+print(prism_cluster_details['isRegisteredToPC'])
+if prism_cluster_details['isRegisteredToPC'] == None and not prism_pc_vm_details: 
+    print("Prism Central {} not deployed on Nutanix cluster {}".format(pc_api,prism_api))
+elif prism_cluster_details['isRegisteredToPC'] == None and prism_pc_vm_details: # if PE not registered and PC vm exist
+    prism_register_pc(prism_api,prism_user,prism_pwd,pc_api,pc_username="admin",pc_secret="Nutanix/4u")
+else:
+    print("Nutanix Cluster {} already registered on Prism Central instance {}".format(prism_api,pc_api))
 # endregion
 
 # region eulas
