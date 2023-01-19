@@ -44,8 +44,8 @@
     ],
     "pc":{
         "name": "pc",
-        "virtual_ip":"10.68.97.151",
-        "network_name":"Primary",
+        "virtual_ip":"10.68.97.150",
+        "network_name":"VLAN201",
         "container_name": "SelfServiceContainer",
         "network_mask": "255.255.254.0",
         "network_gateway": "10.48.68.1",
@@ -55,7 +55,7 @@
     "calm":[
         {
             "project_name": "myproject",
-            "project_network":"Primary",
+            "project_network":"VLAN201",
             "project_permissions":[
                 {"name": "SSP Developers", "type": "group", "role": "Project Admin", "directory": "ntnxlab"},
                 {"name": "devuser04", "type": "user", "role": "Consumer", "directory": "ntnxlab"}
@@ -78,6 +78,13 @@
             "permissions":["Access_Console_Virtual_Machine","View_Virtual_Machine","View_VM_Recovery_Point"]
         }
     ],
+    "stig": {
+        "schedule": "DAILY",
+        "enable_aide": true,
+        "enable_core": true,
+        "enable_high_strength_password": true,
+        "enable_banner": true
+    },
     "cluster":{
         "virtual_ip":"10.68.97.101",
         "data_service_ip":"10.48.69.11",
